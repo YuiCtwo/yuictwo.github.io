@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"><meta><title>数字图像处理 - Ctwo&#039;s Blog</title><link rel="manifest" href="/manifest.json"><meta name="application-name" content="Ctwo&#039;s Blog"><meta name="msapplication-TileImage" content="/img/favicon.svg"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Ctwo&#039;s Blog"><meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="description" content="对于运动引起的图像模糊，最简单的方法是直接做逆滤波，即在已知退化函数的时候使用逆变换得到原图像。但是逆滤波对加性噪声特别敏感，使得恢复的图像几乎不可用。下面一些方法可以解决这个问题，但这些都是基于在已知或者通过一些方法估计得到退化函数的基础之上进行的。 维纳滤波最小均方差（维纳）滤波用来去除含有噪声的模糊图像，其目标是找到一个均方差最小的估计，可以去除噪声，同时清晰化模糊图像。"><meta property="og:type" content="blog"><meta property="og:title" content="数字图像处理"><meta property="og:url" content="http://cyx0706.github.io/2021/08/15/deblur/"><meta property="og:site_name" content="Ctwo&#039;s Blog"><meta property="og:description" content="对于运动引起的图像模糊，最简单的方法是直接做逆滤波，即在已知退化函数的时候使用逆变换得到原图像。但是逆滤波对加性噪声特别敏感，使得恢复的图像几乎不可用。下面一些方法可以解决这个问题，但这些都是基于在已知或者通过一些方法估计得到退化函数的基础之上进行的。 维纳滤波最小均方差（维纳）滤波用来去除含有噪声的模糊图像，其目标是找到一个均方差最小的估计，可以去除噪声，同时清晰化模糊图像。"><meta property="og:locale" content="en_US"><meta property="og:image" content="http://cyx0706.github.io/gallery/cover/dip.jpg"><meta property="article:published_time" content="2021-08-15T04:05:02.000Z"><meta property="article:modified_time" content="2021-08-22T09:47:13.161Z"><meta property="article:author" content="Ctwo"><meta property="article:tag" content="CV"><meta property="article:tag" content="Digital Image Processing"><meta property="twitter:card" content="summary"><meta property="twitter:image" content="/gallery/cover/dip.jpg"><script type="application/ld+json">{"@context":"https://schema.org","@type":"BlogPosting","mainEntityOfPage":{"@type":"WebPage","@id":"http://cyx0706.github.io/2021/08/15/deblur/"},"headline":"数字图像处理","image":["http://cyx0706.github.io/gallery/cover/dip.jpg"],"datePublished":"2021-08-15T04:05:02.000Z","dateModified":"2021-08-22T09:47:13.161Z","author":{"@type":"Person","name":"Ctwo"},"publisher":{"@type":"Organization","name":"Ctwo's Blog","logo":{"@type":"ImageObject","url":"http://cyx0706.github.io/img/logo.svg"}},"description":"对于运动引起的图像模糊，最简单的方法是直接做逆滤波，即在已知退化函数的时候使用逆变换得到原图像。但是逆滤波对加性噪声特别敏感，使得恢复的图像几乎不可用。下面一些方法可以解决这个问题，但这些都是基于在已知或者通过一些方法估计得到退化函数的基础之上进行的。 维纳滤波最小均方差（维纳）滤波用来去除含有噪声的模糊图像，其目标是找到一个均方差最小的估计，可以去除噪声，同时清晰化模糊图像。"}</script><link rel="canonical" href="http://cyx0706.github.io/2021/08/15/deblur/"><link rel="alternate" href="/atom.xml" title="Ctwo&#039;s Blog" type="application/atom+xml"><link rel="icon" href="/img/favicon.svg"><link rel="stylesheet" href="https://cdn.bootcss.com/font-awesome/5.13.0/css/all.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@9.12.0/styles/railscasts.css"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;600&amp;family=Source+Code+Pro"><link rel="stylesheet" href="/css/default.css"><style>body>.footer,body>.navbar,body>.section{opacity:0}</style><!--!--><!--!--><!--!--><!--!--><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cookieconsent@3.1.1/build/cookieconsent.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lightgallery@1.6.8/dist/css/lightgallery.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/justifiedGallery@3.7.0/dist/css/justifiedGallery.min.css"><!--!--><!--!--><!--!--><!--!--><script src="https://cdn.jsdelivr.net/npm/pace-js@1.0.2/pace.min.js"></script><!--!--><!--!--><meta name="generator" content="Hexo 5.2.0"></head><body class="is-2-column"><nav class="navbar navbar-main"><div class="container"><div class="navbar-brand justify-content-center"><a class="navbar-item navbar-logo" href="/"><img src="/img/logo.svg" alt="Ctwo&#039;s Blog" height="28"></a></div><div class="navbar-menu"><div class="navbar-start"><a class="navbar-item" href="/">Home</a><a class="navbar-item" href="/archives">Archives</a><a class="navbar-item" href="/categories">Categories</a><a class="navbar-item" href="/tags">Tags</a><a class="navbar-item" href="/about">About</a></div><div class="navbar-end"><a class="navbar-item" target="_blank" rel="noopener" title="Download on GitHub" href="https://github.com/ppoffice/hexo-theme-icarus"><i class="fab fa-github"></i></a><a class="navbar-item is-hidden-tablet catalogue" title="Catalogue" href="javascript:;"><i class="fas fa-list-ul"></i></a><a class="navbar-item search" title="Search" href="javascript:;"><i class="fas fa-search"></i></a></div></div></div></nav><section class="section"><div class="container"><div class="columns"><div class="column order-2 column-main is-8-tablet is-8-desktop is-9-widescreen"><div class="card"><div class="card-image"><span class="image is-7by3"><img class="fill" src="/gallery/cover/dip.jpg" alt="数字图像处理"></span></div><article class="card-content article" role="article"><div class="article-meta is-size-7 is-uppercase level is-mobile"><div class="level-left"><span class="level-item">Posted&nbsp;<time dateTime="2021-08-15T04:05:02.000Z" title="2021-08-15T04:05:02.000Z">2021-08-15</time></span><span class="level-item">Updated&nbsp;<time dateTime="2021-08-22T09:47:13.161Z" title="2021-08-22T09:47:13.161Z">2021-08-22</time></span><span class="level-item"><a class="link-muted" href="/categories/Digital-Image-Processing/">Digital Image Processing</a></span></div></div><h1 class="title is-3 is-size-4-mobile">数字图像处理</h1><div class="content"><p>对于运动引起的图像模糊，最简单的方法是直接做逆滤波，即在已知退化函数的时候使用逆变换得到原图像。但是逆滤波对加性噪声特别敏感，使得恢复的图像几乎不可用。下面一些方法可以解决这个问题，但这些都是基于在已知或者通过一些方法估计得到退化函数的基础之上进行的。</p>
+<h1 id="维纳滤波"><a href="#维纳滤波" class="headerlink" title="维纳滤波"></a>维纳滤波</h1><p>最小均方差（维纳）滤波用来去除含有噪声的模糊图像，其目标是找到一个均方差最小的估计，可以去除噪声，同时清晰化模糊图像。<br><a id="more"></a></p>
+<p>均方差的定义如下:</p>
+<script type="math/tex; mode=display">
+e^2 = E\{(f-\hat{f})^2\}</script><p>$f$ 是原图像，$\hat{f}$ 是对原图像的估计，让他们方差的期望最小。</p>
+<p>原生的维纳滤波函数比较复杂，但在处理白噪声的时候，可以进行简化，也就是现在常用的滤波函数：</p>
+<script type="math/tex; mode=display">
+\hat{F}(u,v)=[\frac{1}{H(u,v)}\frac{|H(u,v)|^2}{|H(u,v)|^2+K}]G(u,v)</script><p>其中 $H(u,v)$ 代表退化函数（傅里叶变换后），$|H(u,v)^2|=H(u,v)H^*(u,v)$ 即和共轭复数相乘。 $K$ 是常数，一般可以通过交互式选择。</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">wiener</span>(<span class="params">inp, PSF, K=<span class="number">0.01</span></span>):</span></span><br><span class="line">    input_fft = np.fft.fft2(inp)</span><br><span class="line">    PSF_fft = np.fft.fft2(PSF) + <span class="number">1e-3</span></span><br><span class="line">    PSF_fft_1 = np.conj(PSF_fft) / (np.<span class="built_in">abs</span>(PSF_fft) ** <span class="number">2</span> + K)</span><br><span class="line">    result = np.fft.ifft2(input_fft * PSF_fft_1)</span><br><span class="line">    result = np.<span class="built_in">abs</span>(np.fft.fftshift(result))</span><br><span class="line">    <span class="keyword">return</span> result</span><br></pre></td></tr></table></figure>
+<h1 id="约束最小二乘方滤波"><a href="#约束最小二乘方滤波" class="headerlink" title="约束最小二乘方滤波"></a>约束最小二乘方滤波</h1><p>尽管已经简化，维纳滤波的 $K$ 仍需要调整，有些时候他并不总是一个合适的解。</p>
+<p><strong>约束最小二乘方滤波</strong>（Constrained Least Squares Filtering）对于每张图片都会产生最优的结果。</p>
+<p>约束最小二乘方法的算法核心是 $H$ 对噪声的敏感性问题。减少噪声敏感的一种方法是以平滑度量的最佳复原为基础的，如一幅图像的二阶导数，要使复原有意义，就必须使用问题的参数来约束复原。建立下列准则函数 $C$ 和约束条件：</p>
+<script type="math/tex; mode=display">
+\left\{\begin{matrix}
+ C =\sum^{M-1}_{x=0}\sum^{N-1}_{y=0}[\nabla ^2 f(x, y)]^2
+\\ s.t.||g-H\hat{f}||=||\eta ||^2
+\end{matrix}\right.</script><p>其中 $\hat{f}$ 是退化函数，$\eta$ 是加性噪声，拉普拉斯算子在这里可以表示平滑程度，$||a||^2=a^Ta$。</p>
+<p>将上式表示成矩阵的形式，同时将约束项转换为拉格朗日子乘项：</p>
+<script type="math/tex; mode=display">
+||p\hat{f}||^2-\lambda(||g-H\hat{f}||^2-||\eta ||^2)</script><p>其中 $\lambda$ 是拉格朗日乘子。原问题转为最小化上式，对 $\hat{f}$ 求导，令其等于零，有</p>
+<blockquote>
+<p>拉格朗日乘子法简单的来说就是把约束条件添加到求极值的式子中。原因在于当在约束下取极值时，约束曲线一定和原函数的极小值曲线相切，即在切点处两函数梯度成正比。</p>
+</blockquote>
+<script type="math/tex; mode=display">
+p^*p\hat{f}=\lambda H^*(g-H\hat{f})</script><p>解得</p>
+<script type="math/tex; mode=display">
+\hat{f}=[\frac{H^*(u,v)}{||H(u,v)||^2+\lambda||p(u,v)||^2}]g(u,v)</script><p>式中$\lambda$ 必须调整到满足约束条件，而 $p(u,v)$ 是如下函数的傅里叶变换</p>
+<script type="math/tex; mode=display">
+p(x,y)=\begin{bmatrix}
+ 0 & -1 & 0\\
+ -1 & 4 & -1\\
+ 0 & -1 & 0
+\end{bmatrix}</script><p>至此我们可以写出 <code>PLSF</code> </p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">constrained_least_sq</span>(<span class="params">inp, PSF, gamma=<span class="number">0.05</span></span>):</span></span><br><span class="line">    kernel = np.array([[<span class="number">0</span>, -<span class="number">1</span>, <span class="number">0</span>],</span><br><span class="line">                       [-<span class="number">1</span>, <span class="number">4</span>, -<span class="number">1</span>],</span><br><span class="line">                       [<span class="number">0</span>, -<span class="number">1</span>, <span class="number">0</span>]])</span><br><span class="line">    PSF_kernel = np.fft.fft2(kernel)</span><br><span class="line">    inp_fft = np.fft.fft2(inp)</span><br><span class="line">    PF = np.fft.fft2(PSF)</span><br><span class="line">    numerator = np.conj(PF)</span><br><span class="line">    denominator = PF ** <span class="number">2</span> + gamma * (PSF_kernel ** <span class="number">2</span>)</span><br><span class="line">    result = np.fft.ifft2(numerator * inp_fft / denominator)</span><br><span class="line">    result = np.<span class="built_in">abs</span>(np.fft.fftshift(result))</span><br><span class="line">    <span class="keyword">return</span> result</span><br></pre></td></tr></table></figure>
+<p>当然，如果更加精确的调整参数 <code>gamma</code>，既可以选择交互式的方法，根据课本中的公式，也有一种自动的调整方法。</p>
+<script type="math/tex; mode=display">
+\phi (\gamma) = r^Tr=||r||^2 = ||g-H\hat{f}||^2</script><p>已知这是一个单调递增的函数，我们要做的是调整 <code>gamma</code> 使得 $||r||^2 = ||\eta||^2 \pm \alpha$，其中 $\alpha$ 是一个精确度因子，可以用牛顿法，折半法等寻找最小的值。</p>
+<ul>
+<li>对于 $||r||^2$ 的计算，注意到 $R(u,v) = G(u,v)-H(u,v)F(u,v)$，这样我们可以给出</li>
+</ul>
+<script type="math/tex; mode=display">
+||r||^2 = \sum^{M-1}_{x=0}\sum^{N-1}_{y=0}r^2(x,y)</script><ul>
+<li>对于 $||\eta||^2$，我们考虑整张图上的噪声方差，采用取样平均法来估计（当然也可以人为规定）</li>
+</ul>
+<script type="math/tex; mode=display">
+\begin{eqnarray}
+\sigma_{\eta}^2 & = & \frac{1}{MN}\sum^{M-1}_{x = 0}\sum^{N-1}_{y = 0}[\eta(x,y)-\bar{\eta} ]^2
+\\ \bar{\eta} &=& \frac{1}{MN}\sum^{M-1}_{x = 0}\sum^{N-1}_{y = 0}\eta(x, y)
+\end{eqnarray}
+\left.\begin{matrix}
+  & \\
+  &
+\end{matrix}\right\} \Longrightarrow ||\eta||^2=MN[\sigma_{\eta}^2+\bar{\eta}^2]</script><ul>
+<li>上面计算的前提是假设噪声和灰度值是不相关的，我们使用一些可以假定的估计的噪声如椒盐噪声，加性噪声等来估计未知量 $\eta$</li>
+</ul>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 待补充</span></span><br></pre></td></tr></table></figure>
+<h1 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h1><ul>
+<li>《数字图像处理（第四版）》 冈萨雷斯</li>
+<li><a target="_blank" rel="noopener" href="https://blog.csdn.net/wsp_1138886114/article/details/95024180">OpenCV—Python 图像去模糊</a></li>
+<li><a target="_blank" rel="noopener" href="https://www.zhihu.com/question/38586401">如何理解拉格朗日乘子法？</a></li>
+<li><a target="_blank" rel="noopener" href="https://blog.csdn.net/bluecol/article/details/48288739">psf2otf与fft2函数的关系</a></li>
+</ul>
+</div><div class="article-licensing box"><div class="licensing-title"><p>数字图像处理</p><p><a href="http://cyx0706.github.io/2021/08/15/deblur/">http://cyx0706.github.io/2021/08/15/deblur/</a></p></div><div class="licensing-meta level is-mobile"><div class="level-left"><div class="level-item is-narrow"><div><h6>Author</h6><p>Ctwo</p></div></div><div class="level-item is-narrow"><div><h6>Posted on</h6><p>2021-08-15</p></div></div><div class="level-item is-narrow"><div><h6>Updated on</h6><p>2021-08-22</p></div></div><div class="level-item is-narrow"><div><h6>Licensed under</h6><p><a class="icons" rel="noopener" target="_blank" title="Creative Commons" href="https://creativecommons.org/"><i class="icon fab fa-creative-commons"></i></a><a class="icons" rel="noopener" target="_blank" title="Attribution" href="https://creativecommons.org/licenses/by/4.0/"><i class="icon fab fa-creative-commons-by"></i></a><a class="icons" rel="noopener" target="_blank" title="Noncommercial" href="https://creativecommons.org/licenses/by-nc/4.0/"><i class="icon fab fa-creative-commons-nc"></i></a></p></div></div></div></div></div><div class="article-tags is-size-7 mb-4"><span class="mr-2">#</span><a class="link-muted mr-2" rel="tag" href="/tags/CV/">CV</a><a class="link-muted mr-2" rel="tag" href="/tags/Digital-Image-Processing/">Digital Image Processing</a></div><!--!--></article></div><!--!--><nav class="post-navigation mt-4 level is-mobile"><div class="level-end"><a class="article-nav-next level level-item link-muted" href="/2021/08/07/naikai-uni/"><span class="level-item">南开大学旅游指南</span><i class="level-item fas fa-chevron-right"></i></a></div></nav><div class="card"><div class="card-content"><h3 class="title is-5">Comments</h3><div id="comment-container"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gitalk@1.7.2/dist/gitalk.css"><script src="https://cdn.jsdelivr.net/npm/gitalk@1.7.2/dist/gitalk.min.js"></script><script>var gitalk = new Gitalk({
+            id: "0215714ce6c9eba9111536727b2eb44a",
+            repo: "cyx0706.github.io",
+            owner: "cyx0706",
+            clientID: "4d458c0d13a2c2157dbd",
+            clientSecret: "99a8159ca4a12d236f888be149168b92808a4e29",
+            admin: ["cyx0706"],
+            createIssueManually: false,
+            distractionFreeMode: false,
+            perPage: 20,
+            pagerDirection: "last",
+            
+            
+            enableHotKey: true,
+            language: "zh-CN",
+        })
+        gitalk.render('comment-container')</script></div></div></div><div class="column column-left is-4-tablet is-4-desktop is-4-widescreen  order-1 is-sticky"><div class="card widget" id="toc" data-type="toc"><div class="card-content"><div class="menu"><h3 class="menu-label">Catalogue</h3><ul class="menu-list"><li><a class="level is-mobile" href="#维纳滤波"><span class="level-left"><span class="level-item">1</span><span class="level-item">维纳滤波</span></span></a></li><li><a class="level is-mobile" href="#约束最小二乘方滤波"><span class="level-left"><span class="level-item">2</span><span class="level-item">约束最小二乘方滤波</span></span></a></li><li><a class="level is-mobile" href="#参考"><span class="level-left"><span class="level-item">3</span><span class="level-item">参考</span></span></a></li></ul></div></div><style>#toc .menu-list > li > a.is-active + .menu-list { display: block; }#toc .menu-list > li > a + .menu-list { display: none; }</style><script src="/js/toc.js" defer></script></div></div><!--!--></div></div></section><footer class="footer"><div class="container"><div class="level"><div class="level-start"><a class="footer-logo is-block mb-2" href="/"><img src="/img/logo.svg" alt="Ctwo&#039;s Blog" height="28"></a><p class="is-size-7"><span>&copy; 2021 Ctwo</span>  Powered by <a href="https://hexo.io/" target="_blank" rel="noopener">Hexo</a> &amp; <a href="https://github.com/ppoffice/hexo-theme-icarus" target="_blank" rel="noopener">Icarus</a></p></div><div class="level-end"><div class="field has-addons"><p class="control"><a class="button is-transparent is-large" target="_blank" rel="noopener" title="Creative Commons" href="https://creativecommons.org/"><i class="fab fa-creative-commons"></i></a></p><p class="control"><a class="button is-transparent is-large" target="_blank" rel="noopener" title="Attribution 4.0 International" href="https://creativecommons.org/licenses/by/4.0/"><i class="fab fa-creative-commons-by"></i></a></p><p class="control"><a class="button is-transparent is-large" target="_blank" rel="noopener" title="Download on GitHub" href="https://github.com/ppoffice/hexo-theme-icarus"><i class="fab fa-github"></i></a></p></div></div></div></div></footer><script src="https://cdn.jsdelivr.net/npm/jquery@3.3.1/dist/jquery.min.js"></script><script src="https://cdn.jsdelivr.net/npm/moment@2.22.2/min/moment-with-locales.min.js"></script><script src="https://cdn.jsdelivr.net/npm/clipboard@2.0.4/dist/clipboard.min.js" async></script><script>moment.locale("en");</script><script>var IcarusThemeSettings = {
+            article: {
+                highlight: {
+                    clipboard: true,
+                    fold: 'unfolded'
+                }
+            }
+        };</script><script src="/js/column.js"></script><script src="/js/animation.js"></script><a id="back-to-top" title="Back to top" href="javascript:;"><i class="fas fa-chevron-up"></i></a><script src="/js/back_to_top.js" defer></script><!--!--><!--!--><!--!--><script src="https://cdn.jsdelivr.net/npm/cookieconsent@3.1.1/build/cookieconsent.min.js" defer></script><script>window.addEventListener("load", () => {
+      window.cookieconsent.initialise({
+        type: "info",
+        theme: "edgeless",
+        static: false,
+        position: "bottom-left",
+        content: {
+          message: "This website uses cookies to improve your experience.",
+          dismiss: "Got it!",
+          allow: "Allow cookies",
+          deny: "Decline",
+          link: "Learn more",
+          policy: "Cookie Policy",
+          href: "https://www.cookiesandyou.com/",
+        },
+        palette: {
+          popup: {
+            background: "#edeff5",
+            text: "#838391"
+          },
+          button: {
+            background: "#4b81e8"
+          },
+        },
+      });
+    });</script><script src="https://cdn.jsdelivr.net/npm/lightgallery@1.6.8/dist/js/lightgallery.min.js" defer></script><script src="https://cdn.jsdelivr.net/npm/justifiedGallery@3.7.0/dist/js/jquery.justifiedGallery.min.js" defer></script><script>window.addEventListener("load", () => {
+            if (typeof $.fn.lightGallery === 'function') {
+                $('.article').lightGallery({ selector: '.gallery-item' });
+            }
+            if (typeof $.fn.justifiedGallery === 'function') {
+                if ($('.justified-gallery > p > .gallery-item').length) {
+                    $('.justified-gallery > p > .gallery-item').unwrap();
+                }
+                $('.justified-gallery').justifiedGallery();
+            }
+        });</script><!--!--><!--!--><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.11.1/dist/katex.min.css"><script src="https://cdn.jsdelivr.net/npm/katex@0.11.1/dist/katex.min.js" defer></script><script src="https://cdn.jsdelivr.net/npm/katex@0.11.1/dist/contrib/auto-render.min.js" defer></script><script src="https://cdn.jsdelivr.net/npm/katex@0.11.1/dist/contrib/mhchem.js" defer></script><script>window.addEventListener("load", function() {
+            document.querySelectorAll('[role="article"] > .content').forEach(function(element) {
+                renderMathInElement(element);
+            });
+        });</script><script type="text/x-mathjax-config">MathJax.Hub.Config({
+            'HTML-CSS': {
+                matchFontHeight: false
+            },
+            SVG: {
+                matchFontHeight: false
+            },
+            CommonHTML: {
+                matchFontHeight: false
+            },
+            tex2jax: {
+                inlineMath: [
+                    ['$','$'],
+                    ['\\(','\\)']
+                ]
+            }
+        });</script><script src="https://cdn.jsdelivr.net/npm/mathjax@2.7.5/unpacked/MathJax.js?config=TeX-MML-AM_CHTML" defer></script><!--!--><!--!--><!--!--><script src="/js/main.js" defer></script><div class="searchbox"><div class="searchbox-container"><div class="searchbox-header"><div class="searchbox-input-container"><input class="searchbox-input" type="text" placeholder="Type something..."></div><a class="searchbox-close" href="javascript:;">×</a></div><div class="searchbox-body"></div></div></div><script src="/js/insight.js" defer></script><script>document.addEventListener('DOMContentLoaded', function () {
+            loadInsight({"contentUrl":"/content.json"}, {"hint":"Type something...","untitled":"(Untitled)","posts":"Posts","pages":"Pages","categories":"Categories","tags":"Tags"});
+        });</script></body></html>

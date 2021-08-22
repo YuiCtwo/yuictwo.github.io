@@ -6,7 +6,7 @@
   <link href="http://cyx0706.github.io/atom.xml" rel="self"/>
   
   <link href="http://cyx0706.github.io/"/>
-  <updated>2021-08-08T03:41:08.893Z</updated>
+  <updated>2021-08-22T09:47:13.161Z</updated>
   <id>http://cyx0706.github.io/</id>
   
   <author>
@@ -15,6 +15,30 @@
   </author>
   
   <generator uri="https://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>数字图像处理</title>
+    <link href="http://cyx0706.github.io/2021/08/15/deblur/"/>
+    <id>http://cyx0706.github.io/2021/08/15/deblur/</id>
+    <published>2021-08-15T04:05:02.000Z</published>
+    <updated>2021-08-22T09:47:13.161Z</updated>
+    
+    <content type="html"><![CDATA[<p>对于运动引起的图像模糊，最简单的方法是直接做逆滤波，即在已知退化函数的时候使用逆变换得到原图像。但是逆滤波对加性噪声特别敏感，使得恢复的图像几乎不可用。下面一些方法可以解决这个问题，但这些都是基于在已知或者通过一些方法估计得到退化函数的基础之上进行的。</p><h1 id="维纳滤波"><a href="#维纳滤波" class="headerlink" title="维纳滤波"></a>维纳滤波</h1><p>最小均方差（维纳）滤波用来去除含有噪声的模糊图像，其目标是找到一个均方差最小的估计，可以去除噪声，同时清晰化模糊图像。<br><a id="more"></a></p><p>均方差的定义如下:</p><script type="math/tex; mode=display">e^2 = E\{(f-\hat{f})^2\}</script><p>$f$ 是原图像，$\hat{f}$ 是对原图像的估计，让他们方差的期望最小。</p><p>原生的维纳滤波函数比较复杂，但在处理白噪声的时候，可以进行简化，也就是现在常用的滤波函数：</p><script type="math/tex; mode=display">\hat{F}(u,v)=[\frac{1}{H(u,v)}\frac{|H(u,v)|^2}{|H(u,v)|^2+K}]G(u,v)</script><p>其中 $H(u,v)$ 代表退化函数（傅里叶变换后），$|H(u,v)^2|=H(u,v)H^*(u,v)$ 即和共轭复数相乘。 $K$ 是常数，一般可以通过交互式选择。</p><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">wiener</span>(<span class="params">inp, PSF, K=<span class="number">0.01</span></span>):</span></span><br><span class="line">    input_fft = np.fft.fft2(inp)</span><br><span class="line">    PSF_fft = np.fft.fft2(PSF) + <span class="number">1e-3</span></span><br><span class="line">    PSF_fft_1 = np.conj(PSF_fft) / (np.<span class="built_in">abs</span>(PSF_fft) ** <span class="number">2</span> + K)</span><br><span class="line">    result = np.fft.ifft2(input_fft * PSF_fft_1)</span><br><span class="line">    result = np.<span class="built_in">abs</span>(np.fft.fftshift(result))</span><br><span class="line">    <span class="keyword">return</span> result</span><br></pre></td></tr></table></figure><h1 id="约束最小二乘方滤波"><a href="#约束最小二乘方滤波" class="headerlink" title="约束最小二乘方滤波"></a>约束最小二乘方滤波</h1><p>尽管已经简化，维纳滤波的 $K$ 仍需要调整，有些时候他并不总是一个合适的解。</p><p><strong>约束最小二乘方滤波</strong>（Constrained Least Squares Filtering）对于每张图片都会产生最优的结果。</p><p>约束最小二乘方法的算法核心是 $H$ 对噪声的敏感性问题。减少噪声敏感的一种方法是以平滑度量的最佳复原为基础的，如一幅图像的二阶导数，要使复原有意义，就必须使用问题的参数来约束复原。建立下列准则函数 $C$ 和约束条件：</p><script type="math/tex; mode=display">\left\{\begin{matrix} C =\sum^{M-1}_{x=0}\sum^{N-1}_{y=0}[\nabla ^2 f(x, y)]^2\\ s.t.||g-H\hat{f}||=||\eta ||^2\end{matrix}\right.</script><p>其中 $\hat{f}$ 是退化函数，$\eta$ 是加性噪声，拉普拉斯算子在这里可以表示平滑程度，$||a||^2=a^Ta$。</p><p>将上式表示成矩阵的形式，同时将约束项转换为拉格朗日子乘项：</p><script type="math/tex; mode=display">||p\hat{f}||^2-\lambda(||g-H\hat{f}||^2-||\eta ||^2)</script><p>其中 $\lambda$ 是拉格朗日乘子。原问题转为最小化上式，对 $\hat{f}$ 求导，令其等于零，有</p><blockquote><p>拉格朗日乘子法简单的来说就是把约束条件添加到求极值的式子中。原因在于当在约束下取极值时，约束曲线一定和原函数的极小值曲线相切，即在切点处两函数梯度成正比。</p></blockquote><script type="math/tex; mode=display">p^*p\hat{f}=\lambda H^*(g-H\hat{f})</script><p>解得</p><script type="math/tex; mode=display">\hat{f}=[\frac{H^*(u,v)}{||H(u,v)||^2+\lambda||p(u,v)||^2}]g(u,v)</script><p>式中$\lambda$ 必须调整到满足约束条件，而 $p(u,v)$ 是如下函数的傅里叶变换</p><script type="math/tex; mode=display">p(x,y)=\begin{bmatrix} 0 & -1 & 0\\ -1 & 4 & -1\\ 0 & -1 & 0\end{bmatrix}</script><p>至此我们可以写出 <code>PLSF</code> </p><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">constrained_least_sq</span>(<span class="params">inp, PSF, gamma=<span class="number">0.05</span></span>):</span></span><br><span class="line">    kernel = np.array([[<span class="number">0</span>, -<span class="number">1</span>, <span class="number">0</span>],</span><br><span class="line">                       [-<span class="number">1</span>, <span class="number">4</span>, -<span class="number">1</span>],</span><br><span class="line">                       [<span class="number">0</span>, -<span class="number">1</span>, <span class="number">0</span>]])</span><br><span class="line">    PSF_kernel = np.fft.fft2(kernel)</span><br><span class="line">    inp_fft = np.fft.fft2(inp)</span><br><span class="line">    PF = np.fft.fft2(PSF)</span><br><span class="line">    numerator = np.conj(PF)</span><br><span class="line">    denominator = PF ** <span class="number">2</span> + gamma * (PSF_kernel ** <span class="number">2</span>)</span><br><span class="line">    result = np.fft.ifft2(numerator * inp_fft / denominator)</span><br><span class="line">    result = np.<span class="built_in">abs</span>(np.fft.fftshift(result))</span><br><span class="line">    <span class="keyword">return</span> result</span><br></pre></td></tr></table></figure><p>当然，如果更加精确的调整参数 <code>gamma</code>，既可以选择交互式的方法，根据课本中的公式，也有一种自动的调整方法。</p><script type="math/tex; mode=display">\phi (\gamma) = r^Tr=||r||^2 = ||g-H\hat{f}||^2</script><p>已知这是一个单调递增的函数，我们要做的是调整 <code>gamma</code> 使得 $||r||^2 = ||\eta||^2 \pm \alpha$，其中 $\alpha$ 是一个精确度因子，可以用牛顿法，折半法等寻找最小的值。</p><ul><li>对于 $||r||^2$ 的计算，注意到 $R(u,v) = G(u,v)-H(u,v)F(u,v)$，这样我们可以给出</li></ul><script type="math/tex; mode=display">||r||^2 = \sum^{M-1}_{x=0}\sum^{N-1}_{y=0}r^2(x,y)</script><ul><li>对于 $||\eta||^2$，我们考虑整张图上的噪声方差，采用取样平均法来估计（当然也可以人为规定）</li></ul><script type="math/tex; mode=display">\begin{eqnarray}\sigma_{\eta}^2 & = & \frac{1}{MN}\sum^{M-1}_{x = 0}\sum^{N-1}_{y = 0}[\eta(x,y)-\bar{\eta} ]^2\\ \bar{\eta} &=& \frac{1}{MN}\sum^{M-1}_{x = 0}\sum^{N-1}_{y = 0}\eta(x, y)\end{eqnarray}\left.\begin{matrix}  & \\  &\end{matrix}\right\} \Longrightarrow ||\eta||^2=MN[\sigma_{\eta}^2+\bar{\eta}^2]</script><ul><li>上面计算的前提是假设噪声和灰度值是不相关的，我们使用一些可以假定的估计的噪声如椒盐噪声，加性噪声等来估计未知量 $\eta$</li></ul><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 待补充</span></span><br></pre></td></tr></table></figure><h1 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h1><ul><li>《数字图像处理（第四版）》 冈萨雷斯</li><li><a href="https://blog.csdn.net/wsp_1138886114/article/details/95024180">OpenCV—Python 图像去模糊</a></li><li><a href="https://www.zhihu.com/question/38586401">如何理解拉格朗日乘子法？</a></li><li><a href="https://blog.csdn.net/bluecol/article/details/48288739">psf2otf与fft2函数的关系</a></li></ul>]]></content>
+    
+    
+    <summary type="html">&lt;p&gt;对于运动引起的图像模糊，最简单的方法是直接做逆滤波，即在已知退化函数的时候使用逆变换得到原图像。但是逆滤波对加性噪声特别敏感，使得恢复的图像几乎不可用。下面一些方法可以解决这个问题，但这些都是基于在已知或者通过一些方法估计得到退化函数的基础之上进行的。&lt;/p&gt;
+&lt;h1 id=&quot;维纳滤波&quot;&gt;&lt;a href=&quot;#维纳滤波&quot; class=&quot;headerlink&quot; title=&quot;维纳滤波&quot;&gt;&lt;/a&gt;维纳滤波&lt;/h1&gt;&lt;p&gt;最小均方差（维纳）滤波用来去除含有噪声的模糊图像，其目标是找到一个均方差最小的估计，可以去除噪声，同时清晰化模糊图像。&lt;br&gt;</summary>
+    
+    
+    
+    <category term="Digital Image Processing" scheme="http://cyx0706.github.io/categories/Digital-Image-Processing/"/>
+    
+    
+    <category term="CV" scheme="http://cyx0706.github.io/tags/CV/"/>
+    
+    <category term="Digital Image Processing" scheme="http://cyx0706.github.io/tags/Digital-Image-Processing/"/>
+    
+  </entry>
   
   <entry>
     <title>南开大学旅游指南</title>
@@ -171,28 +195,6 @@
     <category term="CV" scheme="http://cyx0706.github.io/tags/CV/"/>
     
     <category term="Digital Image Processing" scheme="http://cyx0706.github.io/tags/Digital-Image-Processing/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>Take Your Time</title>
-    <link href="http://cyx0706.github.io/2021/05/25/busyday/"/>
-    <id>http://cyx0706.github.io/2021/05/25/busyday/</id>
-    <published>2021-05-24T16:57:00.000Z</published>
-    <updated>2021-07-07T08:02:49.311Z</updated>
-    
-    <content type="html"><![CDATA[<p>最近期末考试的安排出来了，学期末要来了，一学期又要结束了，说实话这学期懈怠了好多。</p><p>夏令营在紧张的准备中，联系的导师大多不回复，一度觉得自己要没学上了，加上同学给的压力有点大，好不容易调平心态了，就接着写博客呗…..</p><p>icarus 最近更新了，加入了自定义不同页面的显示，再也不用之前改代码了，是时候翻新一下博客的样式了！图片标题的问题实在是太难看了，顺便如果可以还是直接在页面渲染出来 latex 公式好看，插入图片有点对不齐显得很丑！</p><p>更多的<del>废话</del>放在 more 中了。<br><a id="more"></a></p><ul><li><p>参加了中兴的中兴捧月比赛，很幸运冲进了复赛，苦战 5 天，尽人事了，决赛要有机会我必去陪跑+旅游，想起了我经常出去打比赛的好朋友 AiDai，我也有机会体验一波了。</p></li><li><p>这学期上了数字图像处理这门课，竟然只有5个人。</p><ul><li>问，人去哪里了？答，选微信小程序开发去了。</li><li>问，提前学点CV不香吗？答，分高事少不香吗？</li></ul></li></ul><p>前几天还和学长们聊这个话题，无奈之中还是无奈。大家都想保研，都想不努力就搞高分（我也想啊！可恶）。</p><ul><li>问，你学为啥要学计算机，你要读什么方向的？</li><li>答，收入高啊，热门啊，大家都来了我也来了，研究生目前方向还不清楚。</li><li>问，你为啥不选 xxx （一门挺重要的课）啊？</li><li>答，我这个模块分够了，我选这个还拉我分我为啥要选，xxx（某班第一）也没选。</li></ul><p>我承认自己考试比不过这些人，但我觉得，在考试之外，还有应该更加看重的东西，个人目标，理想，抱负，兴趣难道仅仅是钱多就可以打发的吗？</p><ul><li><p>数字图像处理挺难的（没人选的原因之一？），但一点点来花上时间还是可以弄明白的，数学是个好东西，可惜我会的太少了。</p></li><li><p>Coursera 上吴恩达老师的机器学习课程听着挺香的，力推，难度适中，还有练习题，趁着补了补机器学习的基础。</p></li><li><p>五一时看的漫画《妖精的尾巴》陆陆续续补完了。很向往工会伙伴们的友谊，故事也迎来了圆满的结局，找回来看王道少年漫的感觉，真好。</p></li></ul>]]></content>
-    
-    
-    <summary type="html">&lt;p&gt;最近期末考试的安排出来了，学期末要来了，一学期又要结束了，说实话这学期懈怠了好多。&lt;/p&gt;
-&lt;p&gt;夏令营在紧张的准备中，联系的导师大多不回复，一度觉得自己要没学上了，加上同学给的压力有点大，好不容易调平心态了，就接着写博客呗…..&lt;/p&gt;
-&lt;p&gt;icarus 最近更新了，加入了自定义不同页面的显示，再也不用之前改代码了，是时候翻新一下博客的样式了！图片标题的问题实在是太难看了，顺便如果可以还是直接在页面渲染出来 latex 公式好看，插入图片有点对不齐显得很丑！&lt;/p&gt;
-&lt;p&gt;更多的&lt;del&gt;废话&lt;/del&gt;放在 more 中了。&lt;br&gt;</summary>
-    
-    
-    
-    
-    <category term="essay" scheme="http://cyx0706.github.io/tags/essay/"/>
     
   </entry>
   
