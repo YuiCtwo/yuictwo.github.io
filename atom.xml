@@ -6,7 +6,7 @@
   <link href="http://cyx0706.github.io/atom.xml" rel="self"/>
   
   <link href="http://cyx0706.github.io/"/>
-  <updated>2021-09-23T04:25:39.901Z</updated>
+  <updated>2021-09-29T07:55:09.389Z</updated>
   <id>http://cyx0706.github.io/</id>
   
   <author>
@@ -15,6 +15,34 @@
   </author>
   
   <generator uri="https://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>数字图像处理</title>
+    <link href="http://cyx0706.github.io/2021/09/29/dip4/"/>
+    <id>http://cyx0706.github.io/2021/09/29/dip4/</id>
+    <published>2021-09-29T07:49:40.000Z</published>
+    <updated>2021-09-29T07:55:09.389Z</updated>
+    
+    <content type="html"><![CDATA[<p>Github 的 <code>README.md</code> 并不支持公式的渲染，所以部分原理讲解的东西移到这个篇章的博客中。</p><h2 id="Skeleton">Skeleton</h2><p>前一段时间在看折痕消除的一篇论文的时候提到了提取文字的骨架，就重新复习一下《数字图像处理》这本书中关于骨架的知识。</p><p>集合 <img src="https://math.now.sh?inline=A" style="text-align:center;transform:scale(0.85);display:inline-block;margin: 0;"/> 的骨架的 <img src="https://math.now.sh?inline=S%28A%29" style="text-align:center;transform:scale(0.85);display:inline-block;margin: 0;"/> 概念上很简单：</p><p><strong>若 <img src="https://math.now.sh?inline=z" style="text-align:center;transform:scale(0.85);display:inline-block;margin: 0;"/> 是 <img src="https://math.now.sh?inline=S%28A%29" style="text-align:center;transform:scale(0.85);display:inline-block;margin: 0;"/> 的一点，<img src="https://math.now.sh?inline=D_z" style="text-align:center;transform:scale(0.85);display:inline-block;margin: 0;"/> 是 <img src="https://math.now.sh?inline=A" style="text-align:center;transform:scale(0.85);display:inline-block;margin: 0;"/> 内以 <img src="https://math.now.sh?inline=z" style="text-align:center;transform:scale(0.85);display:inline-block;margin: 0;"/> 为圆心的最大圆盘，则不存在包含 <img src="https://math.now.sh?inline=D_z" style="text-align:center;transform:scale(0.85);display:inline-block;margin: 0;"/> 且位于 <img src="https://math.now.sh?inline=A" style="text-align:center;transform:scale(0.85);display:inline-block;margin: 0;"/> 内的更大圆盘，满足这些条件的圆盘 <img src="https://math.now.sh?inline=D_z" style="text-align:center;transform:scale(0.85);display:inline-block;margin: 0;"/> 称为最大圆盘</strong></p><p>若 <img src="https://math.now.sh?inline=D_z" style="text-align:center;transform:scale(0.85);display:inline-block;margin: 0;"/> 是一个最大圆盘，则它在两个或多个不同的位置与 <img src="https://math.now.sh?inline=A" style="text-align:center;transform:scale(0.85);display:inline-block;margin: 0;"/> 的边界接触。</p><img src="https://i.loli.net/2021/09/29/wFeBZCoqPLaklJW.png" style="zoom: 25%;" /><p><img src="https://math.now.sh?inline=A" style="text-align:center;transform:scale(0.85);display:inline-block;margin: 0;"/> 的骨架可以用腐蚀和开运算来表示：</p><p style="text-align:center;transform:scale(0.85);"><img src="https://math.now.sh?from=S%28A%29%20%3D%20%5Cbigcup_%7Bk%3D0%7D%5E%7BK%7DS_k(A)%3D%20%5Cbigcup_%7Bk%3D0%7D%5E%7BK%7D(A%5Cominus%20kB)-(A%5Cominus%20kB)%5Ccirc%20B%0A" /></p><p>式中，<img src="https://math.now.sh?inline=B" style="text-align:center;transform:scale(0.85);display:inline-block;margin: 0;"/> 是一个结构元，<img src="https://math.now.sh?inline=A%5Cominus%20kB" style="text-align:center;transform:scale(0.85);display:inline-block;margin: 0;"/> 表示 <img src="https://math.now.sh?inline=A" style="text-align:center;transform:scale(0.85);display:inline-block;margin: 0;"/> 的连续 <img src="https://math.now.sh?inline=k" style="text-align:center;transform:scale(0.85);display:inline-block;margin: 0;"/> 次腐蚀，同时，<img src="https://math.now.sh?inline=K" style="text-align:center;transform:scale(0.85);display:inline-block;margin: 0;"/> 是 <img src="https://math.now.sh?inline=A" style="text-align:center;transform:scale(0.85);display:inline-block;margin: 0;"/> 被腐蚀为一个空集前的最后一个迭代步骤：</p><p style="text-align:center;transform:scale(0.85);"><img src="https://math.now.sh?from=K%20%3D%20max%5C%7B%20k%7C%20A%5Cominus%20kB%20%5Cne%20%5Coslash%20%5C%7D%0A" /></p><h2 id="Canny">Canny</h2><h2 id="Hough-Transform">Hough Transform</h2>]]></content>
+    
+    
+      
+      
+    <summary type="html">&lt;p&gt;Github 的 &lt;code&gt;README.md&lt;/code&gt; 并不支持公式的渲染，所以部分原理讲解的东西移到这个篇章的博客中。&lt;/p&gt;
+&lt;h2 id=&quot;Skeleton&quot;&gt;Skeleton&lt;/h2&gt;
+&lt;p&gt;前一段时间在看折痕消除的一篇论文的时候提到了提取文字的骨架，就重新</summary>
+      
+    
+    
+    
+    <category term="Digital Image Processing" scheme="http://cyx0706.github.io/categories/Digital-Image-Processing/"/>
+    
+    
+    <category term="CV" scheme="http://cyx0706.github.io/tags/CV/"/>
+    
+    <category term="Digital Image Processing" scheme="http://cyx0706.github.io/tags/Digital-Image-Processing/"/>
+    
+  </entry>
   
   <entry>
     <title>月亮，象牙塔与孤独的人</title>
@@ -160,25 +188,6 @@
     <summary type="html">&lt;p&gt;&lt;del&gt;上篇写的太负能量了吧&lt;/del&gt;&lt;/p&gt;
 &lt;p&gt;夏令营的面经不想写，也没啥写的，我就没几个夏令营 =_=&lt;/p&gt;
 &lt;p&gt;看到一个很好的基于 icarus 的样式，试了一下，有点问题，有空解决了再换上吧。&lt;br&gt;</summary>
-    
-    
-    
-    
-    <category term="essay" scheme="http://cyx0706.github.io/tags/essay/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>black</title>
-    <link href="http://cyx0706.github.io/2021/07/05/black/"/>
-    <id>http://cyx0706.github.io/2021/07/05/black/</id>
-    <published>2021-07-05T14:26:31.000Z</published>
-    <updated>2021-07-07T08:31:54.604Z</updated>
-    
-    <content type="html"><![CDATA[<p>将近半学期没怎么写博客了，最近夏令营频频心态爆炸，这两天刚考完试颓废过去了，感觉自己的心情也没有很好的调整上来。</p><a id="more"></a><p>又一学期结束了，似乎熬出头了？以后再也没有了考试</p><p>突然有一阵空虚感——我以后的课程还学啥呢，反正不是我想选的，又不在乎成绩了。</p><p>我为有一刹那这么想的自己感到羞愧，想想这一学期的工作，自己嘴边上挂着菜，成绩不好，没学上了，报名和准备夏令营的时候也没做到很好记录。</p><blockquote><p>人菜就需要在时间上磨平差距</p></blockquote><p>我信奉的就是这样简单粗暴的规则，大佬抬抬手就完成的，自己做不来那就多砸时间来完成。</p><p>那么在夏令营报名和准备上我和大佬的区别在于绩点和科研竞赛，那么我有做什么去尝试填吗。没有，报名草草完事，没有提前准备一些最基础的问题。</p><p>可是我在学期末这段时间忙于中兴捧月的比赛，数字图像处理的课程设计，导师考核这些事情，兼顾不过来也正常吧。</p><p>那为什么不早点完成了，前面做的那么悠闲结果事情堆积了，怪时间不够？</p><p>可是…可是…</p><p>自我的责备和批判并不能带给我什么实质性的东西，我缺少一个 “壮士一去不复返的” 精神，看着身边的保研边缘同学都拼了老命的学，考出了优秀的成绩，我不禁在想，为什么我做不到呢？</p><p>有时候总会觉得自己人格分裂了，另一半自己在拼命的否定，挑出各种缺点来鞭笞自己去努力改正。剩下的一半在拼命的鼓励自己，还有希望，还能再坚持，你是最棒的。</p><p>说实话，前一段时间海洋哥的事情，毕竟是我的同学，我也有了解，我和他一样，也是怀着和实力或者能力不相符的梦想，都试着努力让自己变得更加优秀。</p><p>谁让这是我自己做出的决定呢！</p><blockquote><p>明天不会更好，只会将一步步的错误积累下来</p></blockquote><p>你要时时刻刻保持优秀，保持努力，不然就会被抛下，我能做什么？咬牙坚持呗。</p><p>不管怎么说，我愿意在我相信的道路上前进。</p>]]></content>
-    
-    
-    <summary type="html">&lt;p&gt;将近半学期没怎么写博客了，最近夏令营频频心态爆炸，这两天刚考完试颓废过去了，感觉自己的心情也没有很好的调整上来。&lt;/p&gt;</summary>
     
     
     
