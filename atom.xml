@@ -6,7 +6,7 @@
   <link href="http://cyx0706.github.io/atom.xml" rel="self"/>
   
   <link href="http://cyx0706.github.io/"/>
-  <updated>2021-10-09T03:00:05.502Z</updated>
+  <updated>2021-11-15T01:39:03.024Z</updated>
   <id>http://cyx0706.github.io/</id>
   
   <author>
@@ -15,6 +15,30 @@
   </author>
   
   <generator uri="https://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>早安！打工人</title>
+    <link href="http://cyx0706.github.io/2021/11/15/work-work/"/>
+    <id>http://cyx0706.github.io/2021/11/15/work-work/</id>
+    <published>2021-11-15T01:04:48.000Z</published>
+    <updated>2021-11-15T01:39:03.024Z</updated>
+    
+    <content type="html"><![CDATA[<h2 id="关于我突然要打工这件事"><a href="#关于我突然要打工这件事" class="headerlink" title="关于我突然要打工这件事"></a>关于我突然要打工这件事</h2><p>众所周知，在皇家美羊大学计算机系，哦不，应该是计算机学部，慧与班是对于转专业的福利最好的班级了：</p><ul><li>专业课必定可以选中，指年年没有优先级等加课</li><li>实行导师制，大一选定导师可以给你指导，指“可以”指导</li></ul><p>等等，好处竟然有这么多！那么，代价是什么呢！？<br><a id="more"></a></p><blockquote><p>慧与班大四必须参加统一学校安排的实习，即培养方案中的 工程实习II 对于慧与班来说是必修。</p></blockquote><p>受到疫情影响，统一安排指不上了，就改成了可以各自找实习，学校也会找一些实习，也可以参加学校统一安排的实习。</p><p>然后开了腾讯会议说明了实习的相关事项，结束的时候我问：“可以去导师实验室实习吗？”</p><p>我得到的回复是 “工程实习，那肯定要去企业啊！”，没啥问题，确实是，那就去呗。</p><p>个人懒得自己折腾文件，就服从学校安排找了个实习，我前手刚面试完，就停手 XX 同学要去导师那里打工了。</p><p>“你不弄实习的吗？”，“啊，我给老师说过了，我去高校实习。”</p><p>en？好家伙，真就明文规定是明文，私下咋样都行是吧，欺负老实人是吧！</p><p>虽然这种管理我听我爸说的多了去了，就只能接受了，毕竟这样才显得“讲道理”对吧，啊，没时间不想去，反正都要干活去导师那里不一样吗？</p><p>我就干认倒霉呗，反正我这学期还有课，想去也没法去。</p><p>所以从大概 9 号开始，我正式成为一个打工人，可喜可贺，隔壁 AiDai 听了工资都说“我接活一天挣的都比你多”。</p><p>反正我不怎么关心钱，干满学校要求的工时就跑路，来涨涨见识也不错。</p><p><img src="https://i.loli.net/2021/11/15/R7tCWEjlwJnVHPU.jpg" alt=""></p><p><del>然后就被迫三天速成 SpringBoot 拉取干业务</del></p><h2 id="拖更说明"><a href="#拖更说明" class="headerlink" title="拖更说明"></a>拖更说明</h2><p>就在我折腾实习这事的时候，竟然有两个人 star 了我的 Learn-DIP 仓库！！！</p><p>平生第一次不是课内作业得到了 star，给我了继续完善下去的动力，虽然最近疯狂鸽，CS 131 hw5,6,7 还没做，CS231n 还没看，这学期的目标就定为这些学完，写完。</p><p>这段时间接的导师给的翻译论文的任务，也挺累的，但学到了好多新的东西，state-of-art的技术和方法，改日统统写成博客。</p>]]></content>
+    
+    
+    <summary type="html">&lt;h2 id=&quot;关于我突然要打工这件事&quot;&gt;&lt;a href=&quot;#关于我突然要打工这件事&quot; class=&quot;headerlink&quot; title=&quot;关于我突然要打工这件事&quot;&gt;&lt;/a&gt;关于我突然要打工这件事&lt;/h2&gt;&lt;p&gt;众所周知，在皇家美羊大学计算机系，哦不，应该是计算机学部，慧与班是对于转专业的福利最好的班级了：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;专业课必定可以选中，指年年没有优先级等加课&lt;/li&gt;
+&lt;li&gt;实行导师制，大一选定导师可以给你指导，指“可以”指导&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;等等，好处竟然有这么多！那么，代价是什么呢！？&lt;br&gt;</summary>
+    
+    
+    
+    
+    <category term="essay" scheme="http://cyx0706.github.io/tags/essay/"/>
+    
+  </entry>
   
   <entry>
     <title>数字图像处理</title>
@@ -174,27 +198,6 @@
     
     
     <category term="travel" scheme="http://cyx0706.github.io/tags/travel/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>我免费了，暂时的</title>
-    <link href="http://cyx0706.github.io/2021/07/07/tempfree/"/>
-    <id>http://cyx0706.github.io/2021/07/07/tempfree/</id>
-    <published>2021-07-07T07:55:14.000Z</published>
-    <updated>2021-07-09T11:21:47.143Z</updated>
-    
-    <content type="html"><![CDATA[<p><del>上篇写的太负能量了吧</del></p><p>夏令营的面经不想写，也没啥写的，我就没几个夏令营 =_=</p><p>看到一个很好的基于 icarus 的样式，试了一下，有点问题，有空解决了再换上吧。<br><a id="more"></a></p><h1 id="学期总结和暑假计划"><a href="#学期总结和暑假计划" class="headerlink" title="学期总结和暑假计划"></a>学期总结和暑假计划</h1><h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>大三的最后一个学期，前半学期没啥紧张感，甚至打了好几个下午的星际，现在想想就离谱，早点准备点东西不好吗。</p><p>后半学期直接 907, 9 点起床，0 点多睡觉。一周干 7 天，先是处理完了校团委的项目，又是社团的一些烦心事，然后数字图像处理大作业，再是导师考核题目，最后期末前一周跑出去打中兴的比赛，感觉做的事情还不少，要是每个学期都这样就好了。</p><p>中兴的比赛会在 zte 那篇里面说，我大学第一次线下比赛，挺开心。数字图像处理大项目也是我在实验室的做的项目，花了很多的时间而没有一个好的效果，现在想想当时没有放弃就很好了，坚持着做到了最后面。成功虽然不让我满意，也不让我的面试官们满意，但我和享受这整个过程。</p><p>数字图像处理这门课我超级喜欢，老师也很好，是我这学期为数不多的认真学习的课程了。</p><p>数据库考的血炸（成绩说不定又要滑了），老惭愧了，毕竟是爱特程序部也是一届站长的。</p><h2 id="假期规划"><a href="#假期规划" class="headerlink" title="假期规划"></a>假期规划</h2><p>依稀记得寒假计划完成的不多，这次要继续努力了（能早返校我效率直接翻一倍！）</p><p>撇开夏令营来计划：</p><ul><li>翻新博客！</li><li>数字图像处理笔记整理成博客</li><li>重学线性代数，概率统计，找一个好的教程/课程，尽可能的站在计算机的角度去理解学习这两门</li><li>复习专业课知识，准备夏令营</li><li>英语！英语！英语！口语！口语！口语！背单词+磨耳朵</li><li>念念不忘的《一个64位操作系统的实现》，《程序员的自我修养》，有时间就再学学吧</li><li>C++，这个必须要点了，至少看完 primer plus 或者我那本很厚的书吧（当然是挑重要的看），有好的练手项目就做做</li><li>画画！锻炼！</li></ul><p>摸了，这个 todo-list 挺多的，具体到每一天要坚持列任务和计划，我最近总是列着列着就忘记了，还有用好 win 的日历，也可以加入计划和安排。</p><p>老规矩，假期结束来验收，有啥会在这里更新</p>]]></content>
-    
-    
-    <summary type="html">&lt;p&gt;&lt;del&gt;上篇写的太负能量了吧&lt;/del&gt;&lt;/p&gt;
-&lt;p&gt;夏令营的面经不想写，也没啥写的，我就没几个夏令营 =_=&lt;/p&gt;
-&lt;p&gt;看到一个很好的基于 icarus 的样式，试了一下，有点问题，有空解决了再换上吧。&lt;br&gt;</summary>
-    
-    
-    
-    
-    <category term="essay" scheme="http://cyx0706.github.io/tags/essay/"/>
     
   </entry>
   
