@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"><meta><title>双线性插值 - Ctwo&#039;s Blog</title><link rel="manifest" href="/manifest.json"><meta name="application-name" content="Ctwo&#039;s Blog"><meta name="msapplication-TileImage" content="/img/favicon.svg"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Ctwo&#039;s Blog"><meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="description" content="最近复现论文的时候，遇到了一个实现细节的问题：双线性插值技术（bilinear interpolation） 简单来说，插值指利用已知的点来“猜”未知的点的属性值，图像领域插值常用在修改图像尺寸的过程，当然我遇到的这个问题不是简单的调个函数就能解决了的，我需要在一个凸四边形中用四个顶点来表示中心点，在中心点的坐标已知的情况下。"><meta property="og:type" content="blog"><meta property="og:title" content="双线性插值"><meta property="og:url" content="http://cyx0706.github.io/2021/07/23/bilinear-interpolate/"><meta property="og:site_name" content="Ctwo&#039;s Blog"><meta property="og:description" content="最近复现论文的时候，遇到了一个实现细节的问题：双线性插值技术（bilinear interpolation） 简单来说，插值指利用已知的点来“猜”未知的点的属性值，图像领域插值常用在修改图像尺寸的过程，当然我遇到的这个问题不是简单的调个函数就能解决了的，我需要在一个凸四边形中用四个顶点来表示中心点，在中心点的坐标已知的情况下。"><meta property="og:locale" content="en_US"><meta property="og:image" content="http://cyx0706.github.io/gallery/cover/math_in_computer.jpg"><meta property="article:published_time" content="2021-07-23T10:06:12.000Z"><meta property="article:modified_time" content="2021-07-26T10:36:00.266Z"><meta property="article:author" content="Ctwo"><meta property="article:tag" content="math"><meta property="twitter:card" content="summary"><meta property="twitter:image" content="/gallery/cover/math_in_computer.jpg"><script type="application/ld+json">{"@context":"https://schema.org","@type":"BlogPosting","mainEntityOfPage":{"@type":"WebPage","@id":"http://cyx0706.github.io/2021/07/23/bilinear-interpolate/"},"headline":"双线性插值","image":["http://cyx0706.github.io/gallery/cover/math_in_computer.jpg"],"datePublished":"2021-07-23T10:06:12.000Z","dateModified":"2021-07-26T10:36:00.266Z","author":{"@type":"Person","name":"Ctwo"},"publisher":{"@type":"Organization","name":"Ctwo's Blog","logo":{"@type":"ImageObject","url":"http://cyx0706.github.io/img/logo.svg"}},"description":"最近复现论文的时候，遇到了一个实现细节的问题：双线性插值技术（bilinear interpolation） 简单来说，插值指利用已知的点来“猜”未知的点的属性值，图像领域插值常用在修改图像尺寸的过程，当然我遇到的这个问题不是简单的调个函数就能解决了的，我需要在一个凸四边形中用四个顶点来表示中心点，在中心点的坐标已知的情况下。"}</script><link rel="canonical" href="http://cyx0706.github.io/2021/07/23/bilinear-interpolate/"><link rel="alternate" href="/atom.xml" title="Ctwo&#039;s Blog" type="application/atom+xml"><link rel="icon" href="/img/favicon.svg"><link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/font-awesome/5.13.0/css/all.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@9.12.0/styles/railscasts.css"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;600&amp;family=Source+Code+Pro"><link rel="stylesheet" href="/css/default.css"><style>body>.footer,body>.navbar,body>.section{opacity:0}</style><!--!--><!--!--><!--!--><!--!--><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cookieconsent@3.1.1/build/cookieconsent.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lightgallery@1.10.0/dist/css/lightgallery.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/justifiedGallery@3.8.1/dist/css/justifiedGallery.min.css"><!--!--><!--!--><!--!--><!--!--><style>.pace{-webkit-pointer-events:none;pointer-events:none;-webkit-user-select:none;-moz-user-select:none;user-select:none}.pace-inactive{display:none}.pace .pace-progress{background:#3273dc;position:fixed;z-index:2000;top:0;right:100%;width:100%;height:2px}</style><script src="https://cdn.jsdelivr.net/npm/pace-js@1.2.4/pace.min.js"></script><!--!--><!--!--><meta name="generator" content="Hexo 5.4.2"></head><body class="is-2-column"><nav class="navbar navbar-main"><div class="container"><div class="navbar-brand justify-content-center"><a class="navbar-item navbar-logo" href="/"><img src="/img/logo.svg" alt="Ctwo&#039;s Blog" height="28"></a></div><div class="navbar-menu"><div class="navbar-start"><a class="navbar-item" href="/">Home</a><a class="navbar-item" href="/archives">Archives</a><a class="navbar-item" href="/categories">Categories</a><a class="navbar-item" href="/tags">Tags</a><a class="navbar-item" href="/about">About</a></div><div class="navbar-end"><a class="navbar-item is-hidden-tablet catalogue" title="Catalogue" href="javascript:;"><i class="fas fa-list-ul"></i></a><a class="navbar-item search" title="Search" href="javascript:;"><i class="fas fa-search"></i></a></div></div></div></nav><section class="section"><div class="container"><div class="columns"><div class="column order-2 column-main is-8-tablet is-8-desktop is-8-widescreen"><div class="card"><div class="card-image"><span class="image is-7by3"><img class="fill" src="/gallery/cover/math_in_computer.jpg" alt="双线性插值"></span></div><article class="card-content article" role="article"><div class="article-meta is-size-7 is-uppercase level is-mobile"><div class="level-left"><span class="level-item">Posted&nbsp;<time dateTime="2021-07-23T10:06:12.000Z" title="2021/7/23 18:06:12">2021-07-23</time></span><span class="level-item">Updated&nbsp;<time dateTime="2021-07-26T10:36:00.266Z" title="2021/7/26 18:36:00">2021-07-26</time></span><span class="level-item"><a class="link-muted" href="/categories/AI/">AI</a></span></div></div><h1 class="title is-3 is-size-4-mobile">双线性插值</h1><div class="content"><p>最近复现论文的时候，遇到了一个实现细节的问题：双线性插值技术（bilinear interpolation）</p>
+<p>简单来说，插值指利用已知的点来“猜”未知的点的属性值，图像领域插值常用在修改图像尺寸的过程，当然我遇到的这个问题不是简单的调个函数就能解决了的，我需要在一个凸四边形中用四个顶点来表示中心点，在中心点的坐标已知的情况下。</p>
+<a id="more"></a>
+<h1>双线性插值</h1>
+<p>双线性插值运用在图像上，就是用原图像的四个点计算新图像的一个点，这个我们已经很熟悉了：</p>
+<p>很容易能够推导：</p>
+<p><img src="https://i.loli.net/2021/07/23/L4PJjmtbhUTq512.png" alt=""></p>
+<p>如果已知 <img src="https://math.now.sh?inline=Q11%28x_1%2C%20y_1%29%2C%20Q12(x_1%2C%20y_2)%2C%20Q21(x_2%2C%20y_1)%2C%20Q22(x_2%2C%20y_2)" style="text-align:center;transform:scale(0.85)display:inline-block;margin: 0;"/> 要求 <img src="https://math.now.sh?inline=P%28x%2C%20y%29" style="text-align:center;transform:scale(0.85)display:inline-block;margin: 0;"/> 的坐标，我们很容易可以通过等比例的公式得出</p>
+<p style="text-align:center;transform:scale(0.85)"><img src="https://math.now.sh?from=f%28C%29%20%3D%20%5Cfrac%7Bx_2-x%7D%7Bx_2-x_1%7Df(Q11)%20%2B%20%5Cfrac%7Bx-x_1%7D%7Bx_2-x_1%7Df(Q21)%20%5C%5C%0Af(B)%20%3D%20%5Cfrac%7Bx_2-x%7D%7Bx_2-x_1%7Df(Q12)%2B%20%5Cfrac%7Bx-x_1%7D%7Bx_2-x_1%7Df(Q22)%0A" /></p><p>对于 P 在 y 方向上做线性插值，有：</p>
+<p style="text-align:center;transform:scale(0.85)"><img src="https://math.now.sh?from=f%28P%29%20%3D%20%5Cfrac%7By_2-y%7D%7By_2-y_1%7Df(C)%2B%5Cfrac%7By-y_1%7D%7By_2-y_1%7Df(B)%0A" /></p><p>将第一步的结果代入第二步，得到结果：</p>
+<p style="text-align:center;transform:scale(0.85)"><img src="https://math.now.sh?from=f%28x%2C%20y%29%20%3D%20%5Cfrac%7Bf(Q11)(x_2-x)(y_2-y)%2Bf(Q21)(x-x_1)(y_2-y)%2Bf(Q12)(x_2-x)(y-y_1)f(Q22)(x-x_1)(y-y_1)%7D%7B(x_2-x_1)(y_2-y_1)%7D%0A" /></p><p>对于图片的双线性插值，四个点的选择必然是相邻的，即 <img src="https://math.now.sh?inline=x_2-x_1%3D1%3B%20y_2-y_1%3D1" style="text-align:center;transform:scale(0.85)display:inline-block;margin: 0;"/><br>
+简化的形式如下：</p>
+<p style="text-align:center;transform:scale(0.85)"><img src="https://math.now.sh?from=f%28x%2Cy%29%3D%5Csum%20f(Q_i)*W_i%0A" /></p><h2 id="数学推广">数学推广</h2>
+<p>继续深入，双线性插值本质是个数学的问题，它可以被应用在图像大小变化等一些场合中。</p>
+<blockquote>
+<p>In mathematics, bilinear interpolation is an extension of linear interpolation for interpolating functions of two variables (e.g. x and y) on a rectilinear 2D grid</p>
+</blockquote>
+<p>我遇到的就是这样的一个问题是，我的四个点并非是矩形，而且我希望可以用一种方法来让这四个点近似表示 P 点。<br>
+简单来说：</p>
+<blockquote>
+<p>对于非对齐的输入点的双线性插值（Bilinear interpolation with non-aligned input points）</p>
+</blockquote>
+<p>我们的外部不再是一个矩形了，我们定义 <img src="https://math.now.sh?inline=Q11%28x_1%2C%20y_1%29%2C%20Q12(x_2%2C%20y_2)%2C%20Q21(x_3%2C%20y_3)%2C%20Q22(x_4%2C%20y_4)%2C%20P(x%2Cy)" style="text-align:center;transform:scale(0.85)display:inline-block;margin: 0;"/> ，这时我们应该怎样用双线性插值的方法表示 P?<br>
+<img src="https://i.loli.net/2021/07/26/ACBR5brdD2vKMQT.png" alt=""></p>
+<p>为了方便求解，我们转化一下，我们用这种方法来近似表示 P 点，t 和 s 是插值的系数，他们都是处于 0 和 1 之间的数，代表一个相对的权重系数。这样， P 可以用 s 和 t 来表示：</p>
+<p style="text-align:center;transform:scale(0.85)"><img src="https://math.now.sh?from=P%20%3D%20t*%28s*Q22%2B(1-s%29*Q12)%2B(1-t)*(s*Q21%2B(1-s)*Q11)%0A" /></p><p>化简一下就得到了最终的表达式：</p>
+<p style="text-align:center;transform:scale(0.85)"><img src="https://math.now.sh?from=P%20%3D%20Q11*%281-s%29*(1-t)%20%2B%20Q21*s*(1-t)%20%2B%20Q22*s*t%20%2B%20Q12*(1-s)*t.%0A" /></p><p>怎么解这样的一个方程，当然可以用牛顿法等一些近似数值解的算法，但解析解也是可以找到了！</p>
+<p>我们首先先展开上面的式子，它对于 x 和 y 有相似的表示：</p>
+<p style="text-align:center;transform:scale(0.85)"><img src="https://math.now.sh?from=P_x%20%3D%20%281-s%29*(t*x_3%2B(1-t)*x_1)%2Bs*(t*x_4%2B(1-t)*x_2)%20%5C%5C%0AP_y%20%3D%20(1-s)*(t*y_3%2B(1-t)*y_1)%2Bs*(t*y_4%2B(1-t)*y_2)%0A" /></p><p>根据这两个等式，可以解出来 t</p>
+<p style="text-align:center;transform:scale(0.85)"><img src="https://math.now.sh?from=t%20%3D%20%5Cfrac%7B%28(1-s%29*(x_1-x)%2Bs*(x_2-x))%7D%7B((1-s)*(x_1-x_3)%2Bs*(x_2-x_4))%7D%20%5C%5C%0At%20%3D%20%5Cfrac%7B((1-s)*(y_1-y)%2Bs*(y_2-y))%7D%7B((1-s)*(y_1-y_3)%2Bs*(y_2-y_4))%7D%0A" /></p><p>上面两个式子应该相等，这样我们就能联立得到一个伯恩斯坦形式的二次方程（Bernstein polynomial），他有更加优美并且数值上稳定的解，当然用一般二次方程的解也是没有问题的：</p>
+<p style="text-align:center;transform:scale(0.85)"><img src="https://math.now.sh?from=A*%281-s%29%5E2%2BB*2s(1-s)*C*s%5E2%3D0%0A" /></p><p>A, B, C 代表常数系数，最终的解为：</p>
+<p style="text-align:center;transform:scale(0.85)"><img src="https://math.now.sh?from=s%20%3D%7B%28A-B%29%20%5Cpm%20%5Csqrt%7BB%5E2-AC%7D%5Cover%20(A-2B%2BC)%7D%20%5Cqquad%0A%5Cbegin%7Beqnarray%7D%0AA%20%26%20%3D%20%26%20(x_1-x)(y_1-y_3)-(x_1-x_3)(y_1-y)%0A%5C%5CB%20%26%20%3D%20%26%20%5Cfrac%7B(x_1-x)(y_2-y_4)-(x_2-x_4)(y_1-y)%2B(x_2-x)(y_1-y_3)-(x_1-x_3)(y_2-y)%7D%7B2%7D%0A%5C%5CC%20%26%20%3D%20%26%20(x_2-x)(y_2-y_4)-(x_2-x_4)(y_2-y)%0A%5Cend%7Beqnarray%7D%0A" /></p><p>我们需要的 s 应该在 0 和 1 之间，往往得到的两个解会舍弃其中的一个。</p>
+<ul>
+<li>当 <img src="https://math.now.sh?inline=A-2B%2BC%3D0" style="text-align:center;transform:scale(0.85)display:inline-block;margin: 0;"/> 时，对应线性的情况，此时 <img src="https://math.now.sh?inline=s%3D%5Cfrac%7BA%7D%7BA-C%7D" style="text-align:center;transform:scale(0.85)display:inline-block;margin: 0;"/> 而 <img src="https://math.now.sh?inline=A%3DC" style="text-align:center;transform:scale(0.85)display:inline-block;margin: 0;"/>的情况理论上不会发生。</li>
+</ul>
+<blockquote>
+<p>当时矩形的时候 <img src="https://math.now.sh?inline=A%20-%20C%20%3D%20%28x_1-x_2%29(y_1-y_3)" style="text-align:center;transform:scale(0.85)display:inline-block;margin: 0;"/></p>
+</blockquote>
+<p>最后一步就是带回 s 求解 t，选择前面的两个式子中的任意一个均可以。</p>
+<p>这样就确定了解，就像论坛里说的一样 <em>You can bilinearly interpolate in any convex tetragon.</em> 它其实并不像想象中的那么复杂，就是简单的求解一个交点的问题。</p>
+<h2 id="逆双线性插值">逆双线性插值</h2>
+<p>我还见到一种方法叫做<strong>逆双线性插值(inverse bilinear interpolation)</strong>，引用文章里面的图来说明计算过程：</p>
+<p>(其实和前面的基本思路是一样的，只是名字或者看上去不太一样)</p>
+<p><img src="https://i.loli.net/2021/07/26/qzM7jpPumUWYG3e.png" alt=""></p>
+<ul>
+<li>我们将 P 看做是 A, B 的按照系数 u 线性插值的位置点 <img src="https://math.now.sh?inline=P%3DA%2B%28B-A%29u" style="text-align:center;transform:scale(0.85)display:inline-block;margin: 0;"/></li>
+<li>我们将 Q 看做是同样系数的线性插值的位置点 <img src="https://math.now.sh?inline=Q%3DD%2B%28C-D%29u" style="text-align:center;transform:scale(0.85)display:inline-block;margin: 0;"/></li>
+<li>X 是 P 和 Q 的线性插值 <img src="https://math.now.sh?inline=X%3DP%2B%28Q-P%29v" style="text-align:center;transform:scale(0.85)display:inline-block;margin: 0;"/></li>
+</ul>
+<p>这样 X 就可以用 u 和 v 来表示：</p>
+<p style="text-align:center;transform:scale(0.85)"><img src="https://math.now.sh?from=X%20%3D%20A%20%2B%20%28B-A%29u%20%2B(D-A)v%20%2B%20(A-B%2BC-D)uv%0A" /></p><p>X 已知，我们需要多个方程才能解出来 u 和 v，而恰好，上面的式子，在 2 维空间下就有 x 和 y 两个式子，所以肯定有解。</p>
+<p>定义下面几个临时变量：</p>
+<p style="text-align:center;transform:scale(0.85)"><img src="https://math.now.sh?from=%5Cbegin%7Beqnarray%7D%0AE%20%26%3D%26%20B-A%0A%5C%5C%20F%20%26%3D%26%20D-A%0A%5C%5C%20G%20%26%3D%26%20A-B%2BC-D%0A%5C%5C%20H%20%26%3D%26%20X-A%0A%5Cend%7Beqnarray%7D%0A" /></p><p>简化后的等式： <img src="https://math.now.sh?inline=H%3DE*u%2BF*v%2BG*u*v" style="text-align:center;transform:scale(0.85)display:inline-block;margin: 0;"/></p>
+<p>对于任意两个象限 i,j（i, j 可以是 {x, y}, {y, z} …），以 x, y为例<br>
+解得 <img src="https://math.now.sh?inline=u%3D%5Cfrac%7B%28H_x-F_x*v%29%7D%7B(E_x%2BG_x*v)%7D" style="text-align:center;transform:scale(0.85)display:inline-block;margin: 0;"/></p>
+<p>带回，有：</p>
+<p style="text-align:center;transform:scale(0.85)"><img src="https://math.now.sh?from=k_0v%5E2%2Bk_1v%2Bk_2%3D0%20%5Cqquad%0A%5Cbegin%7Beqnarray%7D%0Ak_2%20%26%3D%26%20G_x%20F_y%20-%20G_y%20F_x%0A%5C%5C%20k_1%20%26%3D%26%20E_x%20F_y%20-%20E_y%20F_x%20%2B%20H_x%20G_y%20-%20H_y%20G_x%0A%5C%5C%20k_0%20%26%3D%26%20H_x%20E_y%20-%20H_y%20E_x%0A%5Cend%7Beqnarray%7D%0A" /></p><p>是不是觉得这个式子很熟悉，就是前面的，不过他转换成了一般二次方程的形式，一些小细节的地方也不太一样。主要是它可以完美的扩展到高维情况（虽然我暂时想不到高维的时候有啥用）</p>
+<p>文章最后给出的伪代码：</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">float</span> <span class="title">cross</span><span class="params">( in vec2 a, in vec2 b )</span> </span>&#123; <span class="keyword">return</span> a.x*b.y - a.y*b.x; &#125;</span><br><span class="line"><span class="function">vec2 <span class="title">invBilinear</span><span class="params">( in vec2 p, in vec2 a, in vec2 b, in vec2 c, in vec2 d )</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    vec2 res = <span class="built_in">vec2</span>(<span class="number">-1.0</span>);</span><br><span class="line">    vec2 e = b-a;</span><br><span class="line">    vec2 f = d-a;</span><br><span class="line">    vec2 g = a-b+c-d;</span><br><span class="line">    vec2 h = p-a;</span><br><span class="line">    <span class="keyword">float</span> k2 = <span class="built_in">cross2d</span>( g, f );</span><br><span class="line">    <span class="keyword">float</span> k1 = <span class="built_in">cross2d</span>( e, f ) + <span class="built_in">cross2d</span>( h, g );</span><br><span class="line">    <span class="keyword">float</span> k0 = <span class="built_in">cross2d</span>( h, e );</span><br><span class="line">    <span class="comment">// if edges are parallel, this is a linear equation</span></span><br><span class="line">    <span class="keyword">if</span>( <span class="built_in">abs</span>(k2)&lt;<span class="number">0.001</span> )</span><br><span class="line">    &#123;</span><br><span class="line">        res = <span class="built_in">vec2</span>( (h.x*k1+f.x*k0)/(e.x*k1-g.x*k0), -k0/k1 );</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// otherwise, it&#x27;s a quadratic</span></span><br><span class="line">    <span class="keyword">else</span></span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">float</span> w = k1*k1 - <span class="number">4.0</span>*k0*k2;</span><br><span class="line">        <span class="keyword">if</span>( w&lt;<span class="number">0.0</span> ) <span class="keyword">return</span> <span class="built_in">vec2</span>(<span class="number">-1.0</span>);</span><br><span class="line">        w = <span class="built_in">sqrt</span>( w );</span><br><span class="line">        <span class="keyword">float</span> ik2 = <span class="number">0.5</span>/k2;</span><br><span class="line">        <span class="keyword">float</span> v = (-k1 - w)*ik2;</span><br><span class="line">        <span class="keyword">float</span> u = (h.x - f.x*v)/(e.x + g.x*v);</span><br><span class="line">        </span><br><span class="line">        <span class="keyword">if</span>( u&lt;<span class="number">0.0</span> || u&gt;<span class="number">1.0</span> || v&lt;<span class="number">0.0</span> || v&gt;<span class="number">1.0</span> )</span><br><span class="line">        &#123;</span><br><span class="line">           v = (-k1 + w)*ik2;</span><br><span class="line">           u = (h.x - f.x*v)/(e.x + g.x*v);</span><br><span class="line">        &#125;</span><br><span class="line">        res = <span class="built_in">vec2</span>( u, v );</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> res;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="代码">代码</h2>
+<p><s>我在想要怎样才能让这个方法独立于不同的数据结构（Eigen 或者 OpenCV 的 Vec，原生的 Point 类型），写一个好的模板函数出来。</s></p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"></span><br></pre></td></tr></table></figure>
+<h1>参考链接</h1>
+<ul>
+<li><a target="_blank" rel="noopener" href="https://stackoverflow.com/questions/23920976/bilinear-interpolation-with-non-aligned-input-points">Bilinear interpolation with non-aligned input points</a> （里面有大佬的牛顿法迭代求解）</li>
+<li><a target="_blank" rel="noopener" href="https://blog.csdn.net/qq_33804792/article/details/117483210">双线性插值 Bilinear Interpolation</a></li>
+<li><a target="_blank" rel="noopener" href="https://www.iquilezles.org/www/articles/ibilinear/ibilinear.htm">inverse bilinear interpolation</a></li>
+<li><a target="_blank" rel="noopener" href="https://stackoverflow.com/questions/808441/inverse-bilinear-interpolation">Inverse Bilinear Interpolation?</a></li>
+<li><a href="en.wikipedia.org/wiki/Bernstein_polynomial">Bernstein Polynomial</a></li>
+</ul>
+</div><div class="article-licensing box"><div class="licensing-title"><p>双线性插值</p><p><a href="http://cyx0706.github.io/2021/07/23/bilinear-interpolate/">http://cyx0706.github.io/2021/07/23/bilinear-interpolate/</a></p></div><div class="licensing-meta level is-mobile"><div class="level-left"><div class="level-item is-narrow"><div><h6>Author</h6><p>Ctwo</p></div></div><div class="level-item is-narrow"><div><h6>Posted on</h6><p>2021-07-23</p></div></div><div class="level-item is-narrow"><div><h6>Updated on</h6><p>2021-07-26</p></div></div><div class="level-item is-narrow"><div><h6>Licensed under</h6><p><a class="icons" rel="noopener" target="_blank" title="Creative Commons" href="https://creativecommons.org/"><i class="icon fab fa-creative-commons"></i></a><a class="icons" rel="noopener" target="_blank" title="Attribution" href="https://creativecommons.org/licenses/by/4.0/"><i class="icon fab fa-creative-commons-by"></i></a><a class="icons" rel="noopener" target="_blank" title="Noncommercial" href="https://creativecommons.org/licenses/by-nc/4.0/"><i class="icon fab fa-creative-commons-nc"></i></a></p></div></div></div></div></div><div class="article-tags is-size-7 mb-4"><span class="mr-2">#</span><a class="link-muted mr-2" rel="tag" href="/tags/math/">math</a></div><!--!--></article></div><!--!--><nav class="post-navigation mt-4 level is-mobile"><div class="level-start"><a class="article-nav-prev level level-item link-muted" href="/2021/07/29/design-tech/"><i class="level-item fas fa-chevron-left"></i><span class="level-item">使用设计技术</span></a></div><div class="level-end"><a class="article-nav-next level level-item link-muted" href="/2021/07/07/zte-contest/"><span class="level-item">中兴捧月竞赛</span><i class="level-item fas fa-chevron-right"></i></a></div></nav><div class="card"><div class="card-content"><h3 class="title is-5">Comments</h3><div id="comment-container"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gitalk@1.7.2/dist/gitalk.css"><script src="https://cdn.jsdelivr.net/npm/gitalk@1.7.2/dist/gitalk.min.js"></script><script>var gitalk = new Gitalk({
+            id: "e6bad951283180d56b7040066e2a0470",
+            repo: "yuictwo.github.io",
+            owner: "yuictwo",
+            clientID: "4d458c0d13a2c2157dbd",
+            clientSecret: "99a8159ca4a12d236f888be149168b92808a4e29",
+            admin: ["yuictwo"],
+            createIssueManually: false,
+            distractionFreeMode: false,
+            perPage: 20,
+            pagerDirection: "last",
+            
+            
+            enableHotKey: true,
+            language: "zh-CN",
+        })
+        gitalk.render('comment-container')</script></div></div></div><!--!--><div class="column column-right is-4-tablet is-4-desktop is-4-widescreen  order-3 is-sticky"><div class="card widget" id="toc" data-type="toc"><div class="card-content"><div class="menu"><h3 class="menu-label">Catalogue</h3><ul class="menu-list"><li><a class="level is-mobile" href="#"><span class="level-left"><span class="level-item">1</span><span class="level-item">双线性插值</span></span></a><ul class="menu-list"><li><a class="level is-mobile" href="#数学推广"><span class="level-left"><span class="level-item">1.1</span><span class="level-item">数学推广</span></span></a></li><li><a class="level is-mobile" href="#逆双线性插值"><span class="level-left"><span class="level-item">1.2</span><span class="level-item">逆双线性插值</span></span></a></li><li><a class="level is-mobile" href="#代码"><span class="level-left"><span class="level-item">1.3</span><span class="level-item">代码</span></span></a></li></ul></li><li><a class="level is-mobile" href="#"><span class="level-left"><span class="level-item">2</span><span class="level-item">参考链接</span></span></a></li></ul></div></div><style>#toc .menu-list > li > a.is-active + .menu-list { display: block; }#toc .menu-list > li > a + .menu-list { display: none; }</style><script src="/js/toc.js" defer></script></div></div></div></div></section><footer class="footer"><div class="container"><div class="level"><div class="level-start"><a class="footer-logo is-block mb-2" href="/"><img src="/img/logo.svg" alt="Ctwo&#039;s Blog" height="28"></a><p class="is-size-7"><span>&copy; 2025 Ctwo</span>  Powered by <a href="https://hexo.io/" target="_blank" rel="noopener">Hexo</a> &amp; <a href="https://github.com/ppoffice/hexo-theme-icarus" target="_blank" rel="noopener">Icarus</a></p></div><div class="level-end"><div class="field has-addons"><p class="control"><a class="button is-transparent is-large" target="_blank" rel="noopener" title="Creative Commons" href="https://creativecommons.org/"><i class="fab fa-creative-commons"></i></a></p><p class="control"><a class="button is-transparent is-large" target="_blank" rel="noopener" title="Attribution 4.0 International" href="https://creativecommons.org/licenses/by/4.0/"><i class="fab fa-creative-commons-by"></i></a></p><p class="control"><a class="button is-transparent is-large" target="_blank" rel="noopener" title="Download on GitHub" href="https://github.com/YuiCtwo"><i class="fab fa-github"></i></a></p></div></div></div></div></footer><script src="https://cdn.jsdelivr.net/npm/jquery@3.3.1/dist/jquery.min.js"></script><script src="https://cdn.jsdelivr.net/npm/moment@2.22.2/min/moment-with-locales.min.js"></script><script src="https://cdn.jsdelivr.net/npm/clipboard@2.0.4/dist/clipboard.min.js" defer></script><script>moment.locale("en");</script><script>var IcarusThemeSettings = {
+            article: {
+                highlight: {
+                    clipboard: true,
+                    fold: 'unfolded'
+                }
+            }
+        };</script><script src="/js/column.js"></script><script src="/js/animation.js"></script><a id="back-to-top" title="Back to top" href="javascript:;"><i class="fas fa-chevron-up"></i></a><script src="/js/back_to_top.js" defer></script><!--!--><!--!--><!--!--><script src="https://cdn.jsdelivr.net/npm/cookieconsent@3.1.1/build/cookieconsent.min.js" defer></script><script>window.addEventListener("load", () => {
+      window.cookieconsent.initialise({
+        type: "info",
+        theme: "edgeless",
+        static: false,
+        position: "bottom-left",
+        content: {
+          message: "This website uses cookies to improve your experience.",
+          dismiss: "Got it!",
+          allow: "Allow cookies",
+          deny: "Decline",
+          link: "Learn more",
+          policy: "Cookie Policy",
+          href: "https://www.cookiesandyou.com/",
+        },
+        palette: {
+          popup: {
+            background: "#edeff5",
+            text: "#838391"
+          },
+          button: {
+            background: "#4b81e8"
+          },
+        },
+      });
+    });</script><script src="https://cdn.jsdelivr.net/npm/lightgallery@1.10.0/dist/js/lightgallery.min.js" defer></script><script src="https://cdn.jsdelivr.net/npm/justifiedGallery@3.8.1/dist/js/jquery.justifiedGallery.min.js" defer></script><script>window.addEventListener("load", () => {
+            if (typeof $.fn.lightGallery === 'function') {
+                $('.article').lightGallery({ selector: '.gallery-item' });
+            }
+            if (typeof $.fn.justifiedGallery === 'function') {
+                if ($('.justified-gallery > p > .gallery-item').length) {
+                    $('.justified-gallery > p > .gallery-item').unwrap();
+                }
+                $('.justified-gallery').justifiedGallery();
+            }
+        });</script><!--!--><!--!--><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.15.1/dist/katex.min.css"><script src="https://cdn.jsdelivr.net/npm/katex@0.15.1/dist/katex.min.js" defer></script><script src="https://cdn.jsdelivr.net/npm/katex@0.15.1/dist/contrib/auto-render.min.js" defer></script><script src="https://cdn.jsdelivr.net/npm/katex@0.15.1/dist/contrib/mhchem.min.js" defer></script><script>window.addEventListener("load", function() {
+            document.querySelectorAll('[role="article"] > .content').forEach(function(element) {
+                renderMathInElement(element);
+            });
+        });</script><script type="text/x-mathjax-config">MathJax.Hub.Config({
+            'HTML-CSS': {
+                matchFontHeight: false
+            },
+            SVG: {
+                matchFontHeight: false
+            },
+            CommonHTML: {
+                matchFontHeight: false
+            },
+            tex2jax: {
+                inlineMath: [
+                    ['$','$'],
+                    ['\\(','\\)']
+                ]
+            }
+        });</script><script src="https://cdn.jsdelivr.net/npm/mathjax@2.7.9/unpacked/MathJax.js?config=TeX-MML-AM_CHTML" defer></script><!--!--><!--!--><!--!--><script src="/js/main.js" defer></script><div class="searchbox"><div class="searchbox-container"><div class="searchbox-header"><div class="searchbox-input-container"><input class="searchbox-input" type="text" placeholder="Type something..."></div><a class="searchbox-close" href="javascript:;">×</a></div><div class="searchbox-body"></div></div></div><script src="/js/insight.js" defer></script><script>document.addEventListener('DOMContentLoaded', function () {
+            loadInsight({"contentUrl":"/content.json"}, {"hint":"Type something...","untitled":"(Untitled)","posts":"Posts","pages":"Pages","categories":"Categories","tags":"Tags"});
+        });</script></body></html>

@@ -1,0 +1,244 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"><meta><title>数字图像处理 - Ctwo&#039;s Blog</title><link rel="manifest" href="/manifest.json"><meta name="application-name" content="Ctwo&#039;s Blog"><meta name="msapplication-TileImage" content="/img/favicon.svg"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Ctwo&#039;s Blog"><meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="description" content="Github 的 README.md 并不支持公式的渲染，所以部分原理讲解的东西移到这个篇章的博客中。 本篇包含：  骨架提取 霍夫变换 Canny 边缘检测 Metric Rectification"><meta property="og:type" content="blog"><meta property="og:title" content="数字图像处理"><meta property="og:url" content="http://cyx0706.github.io/2022/04/05/dip4/"><meta property="og:site_name" content="Ctwo&#039;s Blog"><meta property="og:description" content="Github 的 README.md 并不支持公式的渲染，所以部分原理讲解的东西移到这个篇章的博客中。 本篇包含：  骨架提取 霍夫变换 Canny 边缘检测 Metric Rectification"><meta property="og:locale" content="en_US"><meta property="og:image" content="https://i.loli.net/2021/09/29/wFeBZCoqPLaklJW.png"><meta property="og:image" content="https://i.loli.net/2021/10/09/W3JhNH7p6rz5iGe.png"><meta property="og:image" content="https://i.loli.net/2021/10/09/tdZ1nq698TrGY4Q.png"><meta property="article:published_time" content="2022-04-05T07:49:40.000Z"><meta property="article:modified_time" content="2022-05-08T09:15:00.420Z"><meta property="article:author" content="Ctwo"><meta property="article:tag" content="CV"><meta property="article:tag" content="Digital Image Processing"><meta property="twitter:card" content="summary"><meta property="twitter:image" content="https://i.loli.net/2021/09/29/wFeBZCoqPLaklJW.png"><script type="application/ld+json">{"@context":"https://schema.org","@type":"BlogPosting","mainEntityOfPage":{"@type":"WebPage","@id":"http://cyx0706.github.io/2022/04/05/dip4/"},"headline":"数字图像处理","image":["https://i.loli.net/2021/09/29/wFeBZCoqPLaklJW.png","https://i.loli.net/2021/10/09/W3JhNH7p6rz5iGe.png","https://i.loli.net/2021/10/09/tdZ1nq698TrGY4Q.png"],"datePublished":"2022-04-05T07:49:40.000Z","dateModified":"2022-05-08T09:15:00.420Z","author":{"@type":"Person","name":"Ctwo"},"publisher":{"@type":"Organization","name":"Ctwo's Blog","logo":{"@type":"ImageObject","url":"http://cyx0706.github.io/img/logo.svg"}},"description":"Github 的 README.md 并不支持公式的渲染，所以部分原理讲解的东西移到这个篇章的博客中。 本篇包含：  骨架提取 霍夫变换 Canny 边缘检测 Metric Rectification"}</script><link rel="canonical" href="http://cyx0706.github.io/2022/04/05/dip4/"><link rel="alternate" href="/atom.xml" title="Ctwo&#039;s Blog" type="application/atom+xml"><link rel="icon" href="/img/favicon.svg"><link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/font-awesome/5.13.0/css/all.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@9.12.0/styles/railscasts.css"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;600&amp;family=Source+Code+Pro"><link rel="stylesheet" href="/css/default.css"><style>body>.footer,body>.navbar,body>.section{opacity:0}</style><!--!--><!--!--><!--!--><!--!--><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cookieconsent@3.1.1/build/cookieconsent.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lightgallery@1.10.0/dist/css/lightgallery.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/justifiedGallery@3.8.1/dist/css/justifiedGallery.min.css"><!--!--><!--!--><!--!--><!--!--><style>.pace{-webkit-pointer-events:none;pointer-events:none;-webkit-user-select:none;-moz-user-select:none;user-select:none}.pace-inactive{display:none}.pace .pace-progress{background:#3273dc;position:fixed;z-index:2000;top:0;right:100%;width:100%;height:2px}</style><script src="https://cdn.jsdelivr.net/npm/pace-js@1.2.4/pace.min.js"></script><!--!--><!--!--><meta name="generator" content="Hexo 5.4.2"></head><body class="is-2-column"><nav class="navbar navbar-main"><div class="container"><div class="navbar-brand justify-content-center"><a class="navbar-item navbar-logo" href="/"><img src="/img/logo.svg" alt="Ctwo&#039;s Blog" height="28"></a></div><div class="navbar-menu"><div class="navbar-start"><a class="navbar-item" href="/">Home</a><a class="navbar-item" href="/archives">Archives</a><a class="navbar-item" href="/categories">Categories</a><a class="navbar-item" href="/tags">Tags</a><a class="navbar-item" href="/about">About</a></div><div class="navbar-end"><a class="navbar-item is-hidden-tablet catalogue" title="Catalogue" href="javascript:;"><i class="fas fa-list-ul"></i></a><a class="navbar-item search" title="Search" href="javascript:;"><i class="fas fa-search"></i></a></div></div></div></nav><section class="section"><div class="container"><div class="columns"><div class="column order-2 column-main is-8-tablet is-8-desktop is-8-widescreen"><div class="card"><article class="card-content article" role="article"><div class="article-meta is-size-7 is-uppercase level is-mobile"><div class="level-left"><span class="level-item">Posted&nbsp;<time dateTime="2022-04-05T07:49:40.000Z" title="2022/4/5 15:49:40">2022-04-05</time></span><span class="level-item">Updated&nbsp;<time dateTime="2022-05-08T09:15:00.420Z" title="2022/5/8 17:15:00">2022-05-08</time></span><span class="level-item"><a class="link-muted" href="/categories/Digital-Image-Processing/">Digital Image Processing</a></span></div></div><h1 class="title is-3 is-size-4-mobile">数字图像处理</h1><div class="content"><p>Github 的 <code>README.md</code> 并不支持公式的渲染，所以部分原理讲解的东西移到这个篇章的博客中。</p>
+<p>本篇包含：</p>
+<ul>
+<li>骨架提取</li>
+<li>霍夫变换</li>
+<li>Canny 边缘检测</li>
+<li>Metric Rectification</li>
+</ul>
+<a id="more"></a>
+<h2 id="Skeleton"><a href="#Skeleton" class="headerlink" title="Skeleton"></a>Skeleton</h2><p>前一段时间在看折痕消除的一篇论文的时候提到了提取文字的骨架，就重新复习一下《数字图像处理》这本书中关于骨架的知识。</p>
+<p>集合 $A$ 的骨架的 $S(A)$ 概念上很简单：</p>
+<p><strong>若 $z$ 是 $S(A)$ 的一点，$D_z$ 是 $A$ 内以 $z$ 为圆心的最大圆盘，则不存在包含 $D_z$ 且位于 $A$ 内的更大圆盘，满足这些条件的圆盘 $D_z$ 称为最大圆盘</strong></p>
+<p>若 $D_z$ 是一个最大圆盘，则它在两个或多个不同的位置与 $A$ 的边界接触。</p>
+<p><img src="https://i.loli.net/2021/09/29/wFeBZCoqPLaklJW.png" style="zoom: 25%;width: 50%" /></p>
+<p>$A$ 的骨架可以用腐蚀和开运算来表示：</p>
+<script type="math/tex; mode=display">
+S(A) = \bigcup_{k=0}^{K}S_k(A)= \bigcup_{k=0}^{K}(A\ominus kB)-(A\ominus kB)\circ B</script><p>式中，$B$ 是一个结构元，$A\ominus kB$ 表示 $A$ 的连续 $k$ 次腐蚀，同时，$K$ 是 $A$ 被腐蚀为一个空集前的最后一个迭代步骤：</p>
+<script type="math/tex; mode=display">
+K = max\{ k| A\ominus kB \ne \oslash \}</script><h2 id="Canny"><a href="#Canny" class="headerlink" title="Canny"></a>Canny</h2><p>只使用梯度做边缘检测的一个很大的问题是：对噪声过于敏感，所以提出了 Canny 边缘检测算子。</p>
+<p>Canny 算法基于以下三个目标：</p>
+<ul>
+<li><strong>低错误率</strong>：所有边缘都应该被找到，并且不应有虚假响应。</li>
+<li><strong>边缘点应该被很好的定位</strong>：已定位的边缘必须尽可能接近真实边缘，也就是说，由检测子标记为边缘的一点和真实边缘的中心之间的距离应最小。</li>
+<li><strong>单个边缘点响应</strong>：对于每个真实的边缘点，监测子应该只返回一个点，也就是说，真实边缘周围的局部最大数应该是最小的，这意味着检测子不应识别只存在单个边缘的多个边缘像素。</li>
+</ul>
+<p>与之对应的，Canny 边缘检测包含 5 个步骤：</p>
+<ul>
+<li>平滑（Suppress noise）</li>
+<li>梯度计算（Compute gradient magnitude and direction）</li>
+<li>非最大值抑制（Apply non-maximum suppression）</li>
+<li>滞后阈值法/双阈值法（Hysteresis thresholding/Double thresholding）</li>
+<li>连通性分析（Connectivity analysis to detect edges）</li>
+</ul>
+<p>首先采用高斯模糊来平滑图像。令 $f(x, y)$ 表示输入图像，并令 $G(x, y)$ 表示高斯函数：</p>
+<script type="math/tex; mode=display">
+G(x, y) = e^{-\frac{x^2+y^2}{2 \sigma^2}}</script><p>用 G 和 f 的卷积得到平滑后的图像 $f_s(x, y)$</p>
+<p>在这之后计算梯度幅度和方向：</p>
+<script type="math/tex; mode=display">
+M_s(x, y) = || \nabla f_s(x, y) || = \sqrt{g_x^2(x,y)+g_y^2(x, y)} \\
+\alpha(x, y)=\mathrm {arctan} \left [ \frac{g_y(x,y)}{g_x(x,y)} \right ]</script><p>由于梯度图像通常在局部极大值附近包含一些宽脊，下一步非极大值抑制就是细化这些宽脊。</p>
+<p>我们首先将所有可能的边缘方向量化为 4 个方向范围，如 0,45,90,135 如果该点处梯度的幅值小于该方向上的相邻两个点（在该点两侧），则抑制（赋值为 0），否则不变。</p>
+<p>得到的图像 $g_N(x,y)$ 是只包含细化边缘的结果，然后我们对 $g_N(x,y)$ 进行阈值处理，以减少假边缘点。 Canny 算法使用滞后阈值处理，一个高阈值 $T_H$ 和一个低阈值 $T_L$。高低阈值的比率应该在 2 到 3 之间。</p>
+<p>阈值运算可以看做创建了两个新的图像 $g_{NH}$ 和 $g_{NL}$</p>
+<script type="math/tex; mode=display">
+g_{NH}(x,y)=g_N(x,y) \ge T_H \\
+g_{NL}(x,y)= T_H \gt g_N(x,y) \ge T_L</script><p>这两个分别代表“强”边缘像素和“弱”边缘像素，所有的强边界像素均被假设为有效的边缘像素，并被立即标记，如果弱边缘的像素连接到了强边缘（8邻域），则这些弱边缘也被认为是图像的边界，所以最后一步就是用BFS 判断一遍弱边缘是不是连接到了强边缘，如果连接到了，该点也可以认为是强边缘，就从该点继续向 8 邻域搜索。</p>
+<h2 id="Hough-Transform"><a href="#Hough-Transform" class="headerlink" title="Hough Transform"></a>Hough Transform</h2><p>已知一副图像中的 n 个点，假设我们希望找到这些点中位于直线上的子集，一种可能的解决方法是。首先找到由每对点确定的直线，然后寻找特定直线的哪些点的所有子集。这种方法涉及寻找 $\frac{n(n-1)}{2}\sim n^2$ 条直线，然后将每个直线执行 $n*\frac{n(n-1)}{2}\sim n^3$ 次比较，计算困难。</p>
+<p>Hough 提出了一种方法，通常称为霍夫变换。令 $(x_i, y_i)$ 表示 $xy$ 平面上的一点。并考虑一条直线的斜截式：</p>
+<script type="math/tex; mode=display">
+y_i=a x_i +b</script><p>满足过点 $(x_i, y_i)$ 的直线有无数条，此时我们考虑 $ab$ 平面，并将直线改写成为：</p>
+<script type="math/tex; mode=display">
+b=-x_i a +y_i</script><p>在该空间下，通过原直线的两个点 $(x_i, y_i), (x_j, y_j)$ 一定在某个点相交，这个点就是直线的斜率和截距。事实上，直线上的所有的点在该平面上都相交于一个点。</p>
+<p><img src="https://i.loli.net/2021/10/09/W3JhNH7p6rz5iGe.png" alt=""></p>
+<p>为了解决直线斜率无穷大的问题，我们用另外一种直线的标准式：</p>
+<script type="math/tex; mode=display">
+x \cos \theta+y \sin \theta=\rho</script><p><img src="https://i.loli.net/2021/10/09/tdZ1nq698TrGY4Q.png" alt=""></p>
+<p>在具体的算法计算上，霍夫变换首先将参数空间划分为多个累加单元。假设其中$(\rho_{min}, \rho_{max})$ 和 $(\theta_{min}, \theta_{max})$ 是期望的参数值范围。坐标 $(i, j)$ 处具有累加值 $A(i,j)$ 的单元对应参数空间 $(\rho_i, \theta_j)$ 的方格。最初，这些单元格被设置为 0，对 $xy$ 平面的非背景点 $(x_k, y_k)$，对于所有可以取的 $\theta$，求得 $\rho$，将该值四舍五入到 $\rho$ 轴上最接近的单元格，若选择一个 $\theta_q$ 的值解得 $\rho_p$，则令：</p>
+<script type="math/tex; mode=display">
+A(p, q) = A(p, q) + 1</script><p>最后，当 $A(i, j)$ 大于一个特定的值时，认为存在一条对应的直线。</p>
+<h2 id="Metric-Rectification"><a href="#Metric-Rectification" class="headerlink" title="Metric Rectification"></a>Metric Rectification</h2><p>我们需要首先知道 3D 视觉中常见的几种变换</p>
+<ul>
+<li>相似性（<strong>similarity</strong>）变换：由各向同性缩放组成的等距映射</li>
+</ul>
+<script type="math/tex; mode=display">
+\left(\begin{array}{l}
+x^{\prime} \\
+y^{\prime} \\
+1
+\end{array}\right)=\left[\begin{array}{ccc}
+s \cos \theta & -s \sin \theta & t_{x} \\
+s \sin \theta & s \cos \theta & t_{y} \\
+0 & 0 & 1
+\end{array}\right]\left(\begin{array}{l}
+x \\
+y \\
+1
+\end{array}\right)</script><p>也可以写作矩阵块的形式如：</p>
+<script type="math/tex; mode=display">
+x^{\prime}=H_{S} x=\left[\begin{array}{ll}
+s R & t \\
+0^{T} & 1
+\end{array}\right] x</script><ul>
+<li>仿射变换（<strong>affine</strong>）变换：保持二维图形的“平直性”，即变换后直线还是直线不会打弯，圆弧还是圆弧和“平行性”，平行线还是平行线，相交直线的交角不变。</li>
+</ul>
+<script type="math/tex; mode=display">
+x^{\prime}=H_{A} x=\left[\begin{array}{cc}
+A & t \\
+0^{T} & 1
+\end{array}\right] x</script><p>其中 $A$ 是 2×2 的非奇异矩阵。平面仿射变换有6个自由度，对应6个矩阵元素。而它总可以分解为：</p>
+<script type="math/tex; mode=display">
+A=R(\theta) R(-\phi) D R(\phi)</script><p>其中 $R(\theta)$ 和 $R(\phi)$ 是两个旋转角度，D 是对角矩阵</p>
+<script type="math/tex; mode=display">
+D=\left[\begin{array}{cc}
+\lambda_{1} & 0 \\
+0 & \lambda_{2}
+\end{array}\right]</script><p>该分解可以通过 SVD 分解实现。</p>
+<ul>
+<li>单应性 （<strong>homography</strong>） 变换：也叫投影变换</li>
+</ul>
+<script type="math/tex; mode=display">
+x' = H_p x = \begin{bmatrix}
+ A & t\\
+ V^T & v
+\end{bmatrix} x</script><p>其中 $v=(v_1,v_2)^T$。</p>
+<p>投影和仿射变换之间的主要区别在于，对于投影变换，向量 $v$ 不为 null，这是投影变换非线性的原因。</p>
+<p>比较理想点 $(x_1,x_2,0)^T$ 在仿射和投影变换下的不同：</p>
+<p>仿射变换：</p>
+<script type="math/tex; mode=display">
+\left[\begin{array}{cc}
+A & t \\
+0^{T} & 1
+\end{array}\right]\left(\begin{array}{c}
+x_{1} \\
+x_{2} \\
+0
+\end{array}\right)=\left(\begin{array}{c}
+A\left(\begin{array}{c}
+x_{1} \\
+x_{2}
+\end{array}\right) \\
+0
+\end{array}\right)</script><p>投影变换</p>
+<script type="math/tex; mode=display">
+\left[\begin{array}{cc}
+A & t \\
+V^{T} & v
+\end{array}\right]\left(\begin{array}{c}
+x_{1} \\
+x_{2} \\
+0
+\end{array}\right)=\left(\begin{array}{c}
+A\left(\begin{array}{c}
+x_{1} \\
+x_{2}
+\end{array}\right) \\
+v_{1} x_{1}+v_{2} x_{2}
+\end{array}\right)</script><p>在仿射变化中，理想点保持理想状态（即无穷大）。 在投影变换中，它映射到一个有限点。</p>
+<p>要完成图像的度量矫正，我们需要两点：消除投影变换和仿射变换带来的变化</p>
+<p>遵循下面的步骤：</p>
+<ol>
+<li>寻找在图像平面中的平行的点来确定无穷远处的直线表达式。</li>
+<li>由于该线在原本的 3D 坐标系中的无穷远位置移动到了一个有限的位置，我们首先就需要将其回归到无穷远处，即寻找一个变换 $H_p$ 将 $l = (l_1, l_2, l_3)^T$ 变换到 $(0, 0, 1)^T$</li>
+</ol>
+<p>我们一般选择</p>
+<script type="math/tex; mode=display">
+H_p = \begin{bmatrix}
+ 1 & 0 & 0 \\
+ 0 & 1 & 0 \\
+ -l_1/l_3 & -l_2/l_3 & 1/l_3
+\end{bmatrix}</script><ol>
+<li>对于图像的每一点应用该变换即可</li>
+</ol>
+<p>这时图像中平行的线就会平行了，下一步需要矫正角度让垂直的线也能垂直。</p>
+<ol>
+<li>首先先选择好在原始场景中互相垂直的线的端点，在图像中选择这些点构成了新的线和新的夹角。</li>
+</ol>
+<p>我们需要计算 $C^{*}_{\infty}$。对于每一组垂直的线，我们有约束，这些约束构成了一个可以解的方程组：</p>
+<script type="math/tex; mode=display">
+(l_1 m_1, (l_1 m_2 + l_2 m_1) / 2, l_2 m_2, (l_1 m_3 + l_3 m_1) / 2, (l_2 m_3 + l_3 m_2) / 2, l_3 m_3) C = 0</script><ol>
+<li>根据奇异值分解计算可得变换矩阵，对于上一步变换完的结果再乘上该矩阵即可。</li>
+</ol>
+<p>详细过程参考 <a target="_blank" rel="noopener" href="https://github.com/YuiCtwo/Learn-DIP">Learn-DIP</a> 中的代码。</p>
+</div><div class="article-licensing box"><div class="licensing-title"><p>数字图像处理</p><p><a href="http://cyx0706.github.io/2022/04/05/dip4/">http://cyx0706.github.io/2022/04/05/dip4/</a></p></div><div class="licensing-meta level is-mobile"><div class="level-left"><div class="level-item is-narrow"><div><h6>Author</h6><p>Ctwo</p></div></div><div class="level-item is-narrow"><div><h6>Posted on</h6><p>2022-04-05</p></div></div><div class="level-item is-narrow"><div><h6>Updated on</h6><p>2022-05-08</p></div></div><div class="level-item is-narrow"><div><h6>Licensed under</h6><p><a class="icons" rel="noopener" target="_blank" title="Creative Commons" href="https://creativecommons.org/"><i class="icon fab fa-creative-commons"></i></a><a class="icons" rel="noopener" target="_blank" title="Attribution" href="https://creativecommons.org/licenses/by/4.0/"><i class="icon fab fa-creative-commons-by"></i></a><a class="icons" rel="noopener" target="_blank" title="Noncommercial" href="https://creativecommons.org/licenses/by-nc/4.0/"><i class="icon fab fa-creative-commons-nc"></i></a></p></div></div></div></div></div><div class="article-tags is-size-7 mb-4"><span class="mr-2">#</span><a class="link-muted mr-2" rel="tag" href="/tags/CV/">CV</a><a class="link-muted mr-2" rel="tag" href="/tags/Digital-Image-Processing/">Digital Image Processing</a></div><!--!--></article></div><!--!--><nav class="post-navigation mt-4 level is-mobile"><div class="level-start"><a class="article-nav-prev level level-item link-muted" href="/2022/05/16/dip5/"><i class="level-item fas fa-chevron-left"></i><span class="level-item">数字图像处理</span></a></div><div class="level-end"><a class="article-nav-next level level-item link-muted" href="/2022/02/14/utawarerumono/"><span class="level-item">杂谈：传颂之物</span><i class="level-item fas fa-chevron-right"></i></a></div></nav><div class="card"><div class="card-content"><h3 class="title is-5">Comments</h3><div id="comment-container"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gitalk@1.7.2/dist/gitalk.css"><script src="https://cdn.jsdelivr.net/npm/gitalk@1.7.2/dist/gitalk.min.js"></script><script>var gitalk = new Gitalk({
+            id: "66f778fdc6a858b8bf3aa01c7dee8178",
+            repo: "yuictwo.github.io",
+            owner: "yuictwo",
+            clientID: "4d458c0d13a2c2157dbd",
+            clientSecret: "99a8159ca4a12d236f888be149168b92808a4e29",
+            admin: ["yuictwo"],
+            createIssueManually: false,
+            distractionFreeMode: false,
+            perPage: 20,
+            pagerDirection: "last",
+            
+            
+            enableHotKey: true,
+            language: "zh-CN",
+        })
+        gitalk.render('comment-container')</script></div></div></div><!--!--><div class="column column-right is-4-tablet is-4-desktop is-4-widescreen  order-3 is-sticky"><div class="card widget" id="toc" data-type="toc"><div class="card-content"><div class="menu"><h3 class="menu-label">Catalogue</h3><ul class="menu-list"><li><a class="level is-mobile" href="#Skeleton"><span class="level-left"><span class="level-item">1</span><span class="level-item">Skeleton</span></span></a></li><li><a class="level is-mobile" href="#Canny"><span class="level-left"><span class="level-item">2</span><span class="level-item">Canny</span></span></a></li><li><a class="level is-mobile" href="#Hough-Transform"><span class="level-left"><span class="level-item">3</span><span class="level-item">Hough Transform</span></span></a></li><li><a class="level is-mobile" href="#Metric-Rectification"><span class="level-left"><span class="level-item">4</span><span class="level-item">Metric Rectification</span></span></a></li></ul></div></div><style>#toc .menu-list > li > a.is-active + .menu-list { display: block; }#toc .menu-list > li > a + .menu-list { display: none; }</style><script src="/js/toc.js" defer></script></div></div></div></div></section><footer class="footer"><div class="container"><div class="level"><div class="level-start"><a class="footer-logo is-block mb-2" href="/"><img src="/img/logo.svg" alt="Ctwo&#039;s Blog" height="28"></a><p class="is-size-7"><span>&copy; 2025 Ctwo</span>  Powered by <a href="https://hexo.io/" target="_blank" rel="noopener">Hexo</a> &amp; <a href="https://github.com/ppoffice/hexo-theme-icarus" target="_blank" rel="noopener">Icarus</a></p></div><div class="level-end"><div class="field has-addons"><p class="control"><a class="button is-transparent is-large" target="_blank" rel="noopener" title="Creative Commons" href="https://creativecommons.org/"><i class="fab fa-creative-commons"></i></a></p><p class="control"><a class="button is-transparent is-large" target="_blank" rel="noopener" title="Attribution 4.0 International" href="https://creativecommons.org/licenses/by/4.0/"><i class="fab fa-creative-commons-by"></i></a></p><p class="control"><a class="button is-transparent is-large" target="_blank" rel="noopener" title="Download on GitHub" href="https://github.com/YuiCtwo"><i class="fab fa-github"></i></a></p></div></div></div></div></footer><script src="https://cdn.jsdelivr.net/npm/jquery@3.3.1/dist/jquery.min.js"></script><script src="https://cdn.jsdelivr.net/npm/moment@2.22.2/min/moment-with-locales.min.js"></script><script src="https://cdn.jsdelivr.net/npm/clipboard@2.0.4/dist/clipboard.min.js" defer></script><script>moment.locale("en");</script><script>var IcarusThemeSettings = {
+            article: {
+                highlight: {
+                    clipboard: true,
+                    fold: 'unfolded'
+                }
+            }
+        };</script><script src="/js/column.js"></script><script src="/js/animation.js"></script><a id="back-to-top" title="Back to top" href="javascript:;"><i class="fas fa-chevron-up"></i></a><script src="/js/back_to_top.js" defer></script><!--!--><!--!--><!--!--><script src="https://cdn.jsdelivr.net/npm/cookieconsent@3.1.1/build/cookieconsent.min.js" defer></script><script>window.addEventListener("load", () => {
+      window.cookieconsent.initialise({
+        type: "info",
+        theme: "edgeless",
+        static: false,
+        position: "bottom-left",
+        content: {
+          message: "This website uses cookies to improve your experience.",
+          dismiss: "Got it!",
+          allow: "Allow cookies",
+          deny: "Decline",
+          link: "Learn more",
+          policy: "Cookie Policy",
+          href: "https://www.cookiesandyou.com/",
+        },
+        palette: {
+          popup: {
+            background: "#edeff5",
+            text: "#838391"
+          },
+          button: {
+            background: "#4b81e8"
+          },
+        },
+      });
+    });</script><script src="https://cdn.jsdelivr.net/npm/lightgallery@1.10.0/dist/js/lightgallery.min.js" defer></script><script src="https://cdn.jsdelivr.net/npm/justifiedGallery@3.8.1/dist/js/jquery.justifiedGallery.min.js" defer></script><script>window.addEventListener("load", () => {
+            if (typeof $.fn.lightGallery === 'function') {
+                $('.article').lightGallery({ selector: '.gallery-item' });
+            }
+            if (typeof $.fn.justifiedGallery === 'function') {
+                if ($('.justified-gallery > p > .gallery-item').length) {
+                    $('.justified-gallery > p > .gallery-item').unwrap();
+                }
+                $('.justified-gallery').justifiedGallery();
+            }
+        });</script><!--!--><!--!--><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.15.1/dist/katex.min.css"><script src="https://cdn.jsdelivr.net/npm/katex@0.15.1/dist/katex.min.js" defer></script><script src="https://cdn.jsdelivr.net/npm/katex@0.15.1/dist/contrib/auto-render.min.js" defer></script><script src="https://cdn.jsdelivr.net/npm/katex@0.15.1/dist/contrib/mhchem.min.js" defer></script><script>window.addEventListener("load", function() {
+            document.querySelectorAll('[role="article"] > .content').forEach(function(element) {
+                renderMathInElement(element);
+            });
+        });</script><script type="text/x-mathjax-config">MathJax.Hub.Config({
+            'HTML-CSS': {
+                matchFontHeight: false
+            },
+            SVG: {
+                matchFontHeight: false
+            },
+            CommonHTML: {
+                matchFontHeight: false
+            },
+            tex2jax: {
+                inlineMath: [
+                    ['$','$'],
+                    ['\\(','\\)']
+                ]
+            }
+        });</script><script src="https://cdn.jsdelivr.net/npm/mathjax@2.7.9/unpacked/MathJax.js?config=TeX-MML-AM_CHTML" defer></script><!--!--><!--!--><!--!--><script src="/js/main.js" defer></script><div class="searchbox"><div class="searchbox-container"><div class="searchbox-header"><div class="searchbox-input-container"><input class="searchbox-input" type="text" placeholder="Type something..."></div><a class="searchbox-close" href="javascript:;">×</a></div><div class="searchbox-body"></div></div></div><script src="/js/insight.js" defer></script><script>document.addEventListener('DOMContentLoaded', function () {
+            loadInsight({"contentUrl":"/content.json"}, {"hint":"Type something...","untitled":"(Untitled)","posts":"Posts","pages":"Pages","categories":"Categories","tags":"Tags"});
+        });</script></body></html>
